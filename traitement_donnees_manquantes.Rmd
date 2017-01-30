@@ -8,13 +8,13 @@ output: html_document
 # Importation des données
 
 ```{r, echo=FALSE}
-setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/")
+setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/") # Axel
 ```
 
 
 ```{r}
 library(readr)
-base_vih <- read_csv("data/base_vih.csv", 
+base_vih <- data.frame(read_csv("data/base_vih.csv", 
     col_types = cols(age = col_factor(levels = c("0", 
         "1", "2", "3", "4")), cd4b1 = col_factor(levels = c("0", 
         "1", "2")), cd4b2 = col_factor(levels = c("0", 
@@ -33,7 +33,64 @@ base_vih <- read_csv("data/base_vih.csv",
             "1")), sexe = col_factor(levels = c("0", 
             "1")), sida = col_factor(levels = c("0", 
             "1")), typetrt = col_factor(levels = c("0", 
-            "1", "2"))))
-View(base_vih)
+            "1", "2")))))
 ```
+
+On décide d'ajouter une variable booléene pour savoir si la personne atteinte du VIH a arrêté son traitement ou non.
+
+```{r}
+library(dplyr)
+base_vih_df <- base_vih %>%
+    mutate(arret_trt=ifelse(is.na(d_arret), TRUE, FALSE))
+```
+
+## Visualisation des valeurs manquantes
+
+Notre jeu de données est un cas d'étude réel et contient par conséquent des valeurs manquantes.
+Nous décidons d'étudier le nombre de valeurs manquantes pour chaque variable du jeu de données.
+
+```{r}
+sum_nas <- sapply(base_vih_df, function(x) sum(is.na(x)))
+library(VIM)
+aggr(base_vih_df, combined=FALSE)
+sum_nas
+```
+
+Avec l'aide de ce type de visualisation nous pouvons facilement interpréter les valeurs manquantes présentes dans notre jeu de données.
+Nous constatons que nous avons beaucoup de valeurs manquantes pour les variables `d_arret` et `motif` ($33\%$ des valeurs ne sont pas définies). Ceci n'est pas alarmant car la majorité des individus n'ont pas mis fin à leur traitement. C'est donc normal d'avoir des valeurs manquantes les concernant. Il faut davantage s'intéresser aux variables concernant la concentration de CD4 et la charge virale à l'initiation et à l'arrêt du traitement (ou fin du suivi sans arrêt). Pour aller plus loin dans notre analyse, il serait intéressant de relancer le même procédé mais en ne conservant que les variables avec des données manquantes.
+
+```{r}
+col_with_missing_values <- c('sida', 'cd4b1', 'cd4b2', 'cvb1', 'cvb2')
+aggr(base_vih_df[col_with_missing_values], combined=FALSE)
+```
+
+Notre intuition était basée sur le fait qu'il pourrait y exister des combinaisons entre les valeurs manquantes. Par exemple nous pensions que si un individu avait des valeurs manquantes pour la variable `cd4b1` alors il aurait plus de chances d'avoir des valeurs manquantes pour la variable `cd4b2`.
+On constate ici que les proportions sont très faibles (visibles à droite sur le graphique des combinaison) et qu'elles ne nous permettent pas de généraliser notre intuition. 
+
+Afin de traiter ces données manquantes, plusieurs stratégies sont possibles :  
+- Supprimer les lignes avec des données manquantes
+- Interpoler une classe pour chaque variable factorielle avec donnée manquante
+
+## Stratégie d'interpolation pour le facteur lié au sida
+
+Il est étonnant que nous ayons des valeurs manquantes pour le facteur `sida`.
+
+```{r}
+round(length(which(is.na(base_vih_df$sida))) / nrow(base_vih_df) * 100, 2)
+```
+Environ $4\%$ des enregistrements contiennent des valeurs manquantes pour le facteur sida.
+
+Nous pensons qu'il est possible de faire un lien entre la date de début du traitement et la date de séropositivité (début connu de l'infection). En effet, on peut penser que plus un individu séropositif a tardé à prendre son traitement, plus le charge virale pourrait se développer te le taux de CD4 diminuer.
+
+```{r}
+df_sida_sero_trt <- base_vih_df %>%
+  select(sida, d_sero, d_debtrt) %>%
+  mutate(delta_days=d_debtrt-d_sero)
+```
+
+```{r}
+ggplot(data=df_sida_sero_trt, aes(x = delta_days, y = sida)) + geom_point()
+```
+
+Au vu de cette visualisation, nous ne pouvons pas confirmer notre hypothèse. Nous n'avons pas par exemple un large nombre d'individus atteints du sida avec un delta faible (nombre de jours entre le début de la séropositivité et la date de début du traitement).
 
