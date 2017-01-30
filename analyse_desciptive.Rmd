@@ -1,0 +1,79 @@
+---
+title: "analysedescript"
+author: "JM"
+date: "30/01/2017"
+output: html_document
+---
+
+# Importation des données
+
+```{r, echo=FALSE}
+
+setwd(dir = "/home/formationsid/Documents/Github")
+# setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/")
+```
+
+
+```{r}
+library("readr")
+base_vih <- read_csv("data/base_vih.csv", 
+    col_types = cols(age = col_factor(levels = c("0", 
+        "1", "2", "3", "4")), cd4b1 = col_factor(levels = c("0", 
+        "1", "2")), cd4b2 = col_factor(levels = c("0", 
+        "1", "2")), conta = col_factor(levels = c("0", 
+        "1", "2", "3")), cvb1 = col_factor(levels = c("0", 
+        "1", "2")), cvb2 = col_factor(levels = c("0", 
+        "1", "2")), d_arret = col_date(format = "%d/%m/%y"), 
+        d_debtrt = col_date(format = "%d/%m/%y"), 
+        d_point = col_date(format = "%d/%m/%y"), 
+        d_sero = col_date(format = "%d/%m/%y"), 
+        debtrtc = col_factor(levels = c("0", 
+            "1")), motif = col_factor(levels = c("Intolerance/Toxicite", 
+            "Echec therapeutique", "Simplification trt", 
+            "Autres", "Pb d'observance")), 
+        observ = col_factor(levels = c("0", 
+            "1")), sexe = col_factor(levels = c("0", 
+            "1")), sida = col_factor(levels = c("0", 
+            "1")), typetrt = col_factor(levels = c("0", 
+            "1", "2"))))
+View(base_vih)
+```
+
+## Analyse descriptive
+
+```{r}
+age = summary(base_vih$age)*100/1136
+age
+barplot(age, ylim=c(0,40), xlab="tranches d'âge des patients", ylab="Fréquences (en %)", main="Proportion de patients par tranche d'âge")
+```
+
+L'âge des patients varie de 18 à 60 ans. La catégorie 4 [60;+] est vide. La tranche d'âge modale est [30;40], elle représente près de 2 patients sur 5 (39% des patients).
+
+```{r}
+sexe = summary(base_vih$sexe)*100/1136
+sexe
+barplot(sexe, ylim=c(0,70), xlab="sexe des patients", ylab="Fréquence (en %)", main="Proportion de patients par sexe")
+```
+
+Les femmes représentent deux tiers des patients (770), contre un tier pour les hommes (336).
+
+```{r}
+observ = summary(base_vih$observ)*100/1136
+observ
+barplot(observ, ylim=c(0,80), xlab="observance ou non des patients", ylab="Fréquence (en %)", main="Proportion de patients en fonction de d'une observence ou non")
+```
+Environ 4 patients sur 5, 79.4%, ne suivent pas leur traitement correctement.
+
+```{r}
+sida = summary(base_vih$sida)*100/1136
+sida
+barplot(sida, ylim=c(0,100), xlab="Sida", ylab="Fréquence (en %)", main="Proportion de patients ayant atteint le stade du sida")
+```
+13% des patient atteint par le VIH ont atteint le stade du SIDA, plus 4% dont on igniore le stade.
+
+```{r}
+conta = summary(base_vih$conta)*100/1136
+conta
+barplot(conta, ylim=c(0,50), xlab="Mode de contamination", ylab="Fréquence (en %)", main="Proportion de patients suivant le mode de contamination")
+```
+Plus de quatre patients sur cinq sont contaminé par 
