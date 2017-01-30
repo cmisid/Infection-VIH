@@ -1,0 +1,39 @@
+---
+title: "Traitement des données manquantes"
+author: "Axel Bellec"
+date: "1/30/2017"
+output: html_document
+---
+
+# Importation des données
+
+```{r, echo=FALSE}
+setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/")
+```
+
+
+```{r}
+library(readr)
+base_vih <- read_csv("data/base_vih.csv", 
+    col_types = cols(age = col_factor(levels = c("0", 
+        "1", "2", "3", "4")), cd4b1 = col_factor(levels = c("0", 
+        "1", "2")), cd4b2 = col_factor(levels = c("0", 
+        "1", "2")), conta = col_factor(levels = c("0", 
+        "1", "2", "3")), cvb1 = col_factor(levels = c("0", 
+        "1", "2")), cvb2 = col_factor(levels = c("0", 
+        "1", "2")), d_arret = col_date(format = "%d/%m/%y"), 
+        d_debtrt = col_date(format = "%d/%m/%y"), 
+        d_point = col_date(format = "%d/%m/%y"), 
+        d_sero = col_date(format = "%d/%m/%y"), 
+        debtrtc = col_factor(levels = c("0", 
+            "1")), motif = col_factor(levels = c("Intolerance/Toxicite", 
+            "Echec therapeutique", "Simplification trt", 
+            "Autres", "Pb d'observance")), 
+        observ = col_factor(levels = c("0", 
+            "1")), sexe = col_factor(levels = c("0", 
+            "1")), sida = col_factor(levels = c("0", 
+            "1")), typetrt = col_factor(levels = c("0", 
+            "1", "2"))))
+View(base_vih)
+```
+
