@@ -1,0 +1,178 @@
+---
+title: "Etude descriptive arrets"
+output: html_document
+---
+
+
+## Préparation des données
+
+Dans un premier temps nous ajoutons une colonne de booléans qui prend la valeur `TRUE` si le patient en question a arrété son traitement et `FALSE` sinon.
+
+```{r, include=FALSE}
+library(readr)
+base_vih <- read_csv("data/base_vih.csv", 
+    col_types = cols(age = col_factor(levels = c("0", 
+        "1", "2", "3", "4")), cd4b1 = col_factor(levels = c("0", 
+        "1", "2")), cd4b2 = col_factor(levels = c("0", 
+        "1", "2")), conta = col_factor(levels = c("0", 
+        "1", "2", "3")), cvb1 = col_factor(levels = c("0", 
+        "1", "2")), cvb2 = col_factor(levels = c("0", 
+        "1", "2")), d_arret = col_date(format = "%d/%m/%y"), 
+        d_debtrt = col_date(format = "%d/%m/%y"), 
+        d_point = col_date(format = "%d/%m/%y"), 
+        d_sero = col_date(format = "%d/%m/%y"), 
+        debtrtc = col_factor(levels = c("0", 
+            "1")), motif = col_factor(levels = c("Intolerance/Toxicite", 
+            "Echec therapeutique", "Simplification trt", 
+            "Autres", "Pb d'observance")), 
+        observ = col_factor(levels = c("0", 
+            "1")), sexe = col_factor(levels = c("0", 
+            "1")), sida = col_factor(levels = c("0", 
+            "1")), typetrt = col_factor(levels = c("0", 
+            "1", "2"))))
+```
+
+
+```{r}
+vih = base_vih
+attach(vih)
+is_arret = is.na(d_arret)
+vih["is_arret"] = is_arret
+```
+
+## Description des données
+On observe que 360 sur 1136 individus arrètent le traitement un équivalent de 31,6% de la population.
+```{r}
+summary(is_arret) 
+```
+Dans un premier temps, nous allons essayer d'observer quels sont les facteurs qui ont engendré le plus d'arrêt de traitement chez les différents patients.
+### Facteur: Type de traitement
+On observe que presque 83% des individus qui ont arrêté le traitement ont suivi le traitement 0 et 1, d'ou l'hypothèse que le nouveau traitement (traitement 2) est plus efficace que les premiers, et entraîne de moins en moins d'arrêts.
+D'après le test de chi-2, on observe que la p-value <<< 5%, dalors l'indépendance est rejetée entre le type du traitement appliqué sur le patient et la variable réponse booléane `is_arret`.
+
+
+```{r}
+x = table(is_arret, typetrt)
+prop.table(x,2)
+
+chisq.test(x)
+```
+
+### Facteur: Age
+Si on ne considère pas la tranche d'age numéro 4, le facteur age n'a apparement pas beaucoup d'effet vis à vis le pourcentage des individus qui arrêtent le traitement, on remarque une légère hausse de pourcentage pour les individus agés par comparaison aux moins agés. 
+Le test de chi2 appuie notre hypothèse de départ puisque on a `p-value = 0.3315` qui montre que l'effet de l'age est non significatif p-value > 5%.
+
+```{r}
+x = table(is_arret, age)
+prop.table(x,2)
+
+chisq.test(x[,1:4] )
+```
+
+### Facteur: observance (observ)
+75% des individus qui ont arreté le traitement sont marqués comme des patients qui ne respectent pas la posologie de leurs traitement, et 81% des individus qui n'ont pas arrêté le traitement ne respectent pas cette posologie non plus.
+Donc la variable posologie n'est pas une variable explicative, le test de chi2 le démontre puisque p-value > 5%.
+
+```{r}
+x = table(is_arret, observ)
+prop.table(x,1)
+
+chisq.test(x)
+```
+
+### Facteur: sida
+91,3% des gens qui ont arrêté le traitement ne sont pas encore passé à la phase du sida, mais aussi 83,6% des gens qui suivent toujours le traitement ne sont pas encore passé à cette phase. On peut remarquer que la plupart des individus qui ont arreté le traitement n'ont pas le sida, ce n'est que 8% qui ont le sida parmis ces gens.
+On fait un test de Chi2 pour voir est ce qu'il y a une dépendance entre l'arret du traitement et le facteur sida, et le résultat est p-value << 5%, on peut donc dire que l'effet du sida sur l'arret du traitement chez les patients est significatif.
+```{r}
+x = table(is_arret, sida)
+prop.table(x,1)
+
+chisq.test(x)
+```
+### Facteur: sexe
+Le facteur sexe n'est pas significatif puisque la p-value > 5% selon le test de chi2.
+```{r}
+summary(sexe)
+
+x = table(is_arret, sexe)
+prop.table(x,1)
+
+chisq.test(x)
+```
+
+### Facteur: conta (mode de contamination)
+Le mode de contamination est un facteur dont l'effet est significatif sur l'arret ou non des individus, puisque sa p-value < 5%
+```{r}
+chisq.test(x)
+```
+
+### Facteur: cd4b1 et cd4b2
+Les deux facteurs cd4b1 et cd4b2 ne sont pas indépendantes avec le facteur arret du traitement puisque leurs p-value respectives est <<< 5%. 
+```{r}
+x = table(sida, cd4b1)
+prop.table(x,1)
+
+chisq.test(x)
+
+x = table(sida, cd4b2)
+prop.table(x,1)
+
+chisq.test(x)
+```
+
+### Facteurs: cvb1 et cvb2
+Les deux facteurs cvb1 et indépendant car p-value << 5%, mais cvb2 est indépendant puisque p-value > 5%.
+```{r}
+x = table(sida, cvb1)
+prop.table(x,1)
+
+chisq.test(x)
+
+x = table(sida, cvb2)
+prop.table(x,1)
+
+chisq.test(x)
+```
+## Analyse de la variance
+
+### Analyse à un facteur 
+
+```{r}
+options(contrats=c("contr.SAS","contr.SAS")) 
+
+aov.cd4b1 = aov(is_arret ~ cd4b1)
+summary(aov.cd4b1)
+
+aov.cd4b2 = aov(is_arret ~ cd4b2)
+summary(aov.cd4b2)
+
+aov.cvb1 = aov(is_arret ~ cvb1)
+summary(aov.cvb1)
+
+aov.cvb2 = aov(is_arret ~ cvb2)
+summary(aov.cvb2)
+
+aov.typetrt = aov(is_arret ~ typetrt)
+summary(aov.typetrt)
+
+aov.sida = aov(is_arret ~ sida)
+summary(aov.sida)
+
+aov.conta = aov(is_arret ~ conta)
+summary(aov.conta) 
+```
+
+### Analyse à deux facteurs
+
+```{r}
+reg.log = glm(is_arret ~ typetrt + age + observ + sida + sexe + conta + cd4b1 + cd4b2 + cvb1 + cvb2 )
+anova(reg.log, test = "Chisq")
+summary(reg.log)
+```
+```{r}
+reg.log.backward = step(reg.log, direction = "backward")
+anova(reg.log.backward, test="Chisq")
+summary(reg.log.backward)
+```
+
+

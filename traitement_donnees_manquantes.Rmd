@@ -9,8 +9,9 @@ output: html_document
 
 ## Importation des données
 
-```{r, echo=FALSE}
-setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/") # Axel
+```{r, echo=FALSE} 
+#setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/")
+setwd(dir = "/Users/ismailaddou/Documents/R/Infection-VIH") #Ismail
 ```
 
 
@@ -35,7 +36,13 @@ base_vih <- data.frame(read_csv("data/base_vih.csv",
             "1")), sexe = col_factor(levels = c("0", 
             "1")), sida = col_factor(levels = c("0", 
             "1")), typetrt = col_factor(levels = c("0", 
+<<<<<<< HEAD
+            "1", "2"))))
+
+write.table(base_vih, file='base_vih.csv')
+=======
             "1", "2")))))
+>>>>>>> c2137cb9e264a29d2ea87d4dccf0ef6c8dd52f9e
 ```
 
 On décide d'ajouter une variable booléene pour savoir si la personne atteinte du VIH a arrêté son traitement ou non.
