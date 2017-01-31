@@ -106,23 +106,24 @@ library(caret)
 # Specify cross validation tuning
 fitControl <- trainControl(method = "cv", 
                            number = 10)
-
 rpart_grid <- expand.grid(.cp=0.2)
 
-# On veut avoir autant de tuples ou sida = 1 que de tuples ou sida = 0
-
+# We want to have a train dataset containing as much tuples for sida=1 than sida=0
+# We filter our original dataframe to keep only people with AIDS
 train_sida1_df <- base_vih_df[base_vih_df$sida == "1",] %>%
   na.omit(sida)
-
+# Then we sample our original dataframe to avoid over-sampling
 train_sida0_df <- base_vih_df[base_vih_df$sida == "0",] %>%
   na.omit(sida) 
 train_sida0_df <- sample_n(train_sida0_df, size = nrow(train_sida1_df))
-  
+
+# We build our test dataset
 train_df <- data.frame(rbind(
   train_sida0_df,
   train_sida1_df
 ))
 
+# Let's train the Decision Tree classifier
 train_rpart <- train(sida ~ cd4b1 + cvb1 + cvb2 + sexe, 
                      data=train_df, method="rpart", 
                      trControl=fitControl, 
@@ -131,38 +132,63 @@ train_rpart
 ```
 
 ```{r}
+# Build the test dataset containing our NaN values for sida
 test_df <- base_vih_df[which(is.na(base_vih_df$sida)),]
-
-preds <- predict(train_rpart, test_df, type="prob") %>%
-  mutate(dominant_class=ifelse())
+# Classification step
+preds <- predict(train_rpart, test_df, type="raw")
+preds
 ```
-Ici nous constatons que nous avons réussi à estimer la modalité pour le facteur `sida` pour l'ensemble des valeurs manquantes.
-Il nous faut maintenant récupérer l'index des lignes à remplacer dans le tableau `base_vih_df`.
+Ici nous constatons que nous avons réussi à estimer la modalité pour le facteur `sida` pour l'ensemble des valeurs manquantes. Il nous faut maintenant récupérer l'index des lignes à remplacer dans le tableau `base_vih_df`. Puis, pour chaque ligne avec une valeur manquante pour le facteur lié au sida, on recherche dans la liste des prédictions la valeurs associée.
 
 ```{r}
+# List of indexes where the modality for `sida` is NaN
 na_index <- which(is.na(base_vih_df$sida))
-base_vih_df$sida[na_index] <- 1
+# For each index, find the value in predictions array and assign it to our previous NaN value
+for (i in 1:length(na_index)) {
+ base_vih_df$sida[na_index[i]] <- preds[i] 
+}
 ```
 
-## Stratégie d'interpolation pour les facteurs liés au CD4
+## Stratégie d'interpolation pour les facteurs liés à la charge virale
 
-On s'intéresse ensuite à la variable `cvb2` qui correspond à la charge virale à l'arrêt du traitement ou à la fin du suivi sans arrêt car c'est la variable avec la plus grande proportion de valeurs manquantes ($\sim 25\%$).
+On s'intéresse ensuite à la variable `cvb2` qui correspond à la charge virale à l'arrêt du traitement ou à la fin du suivi sans arrêt car c'est la variable avec la plus grande proportion de valeurs manquantes ($\sim 25\%$). On décide d'adopter la même stratégie que pour le facteur `sida`
 
 ```{r}
+table(base_vih_df$cvb2)
+```
+Les 3 modalités de la variable `cvb2` ne sont pas représentées de la même manière. Le nombre d'individus ayant une charge virale (à l'arrêt du traitement ou fin du suivi) est comprise entre $1.7$ et $4$ est sous représentée. On a 111 observations. Nous allons donc construire un jeu de test avec au maximum 111 observations (mais il faudra retirer les valeurs manquantes pour chaque modalité).
+
+```{r}
+library(caret)
+
+# Specify cross validation tuning
 fitControl <- trainControl(method = "cv", 
                            number = 10)
+rpart_grid <- expand.grid(.cp=0.2)
 
-rpart_grid <- expand.grid(.cp=0.4)
+train_cvb2_2_df <- base_vih_df[base_vih_df$cvb2 == "2",] %>%
+  na.omit(cvb2) 
 
-train_df <- base_vih_df[which(!is.na(base_vih_df$cd4b1)),]
-test_df <- base_vih_df[which(is.na(base_vih_df$cd4b1)),]
+train_cvb2_1_df <- base_vih_df[base_vih_df$cvb2 == "1",] %>%
+  na.omit(cvb2) 
+train_cvb2_1_df <- sample_n(train_cvb2_1_df, size = nrow(train_cvb2_2_df))
 
-train_rpart <- train(cd4b1 ~ age + sexe + observ + + conta + typetrt + debtrtc,
-                     data=train_df, 
-                     method="rpart", 
+train_cvb2_0_df <- base_vih_df[base_vih_df$cvb2 == "0",] %>%
+  na.omit(cvb2) 
+train_cvb2_0_df <- sample_n(train_cvb2_0_df, size = nrow(train_cvb2_2_df))
+
+train_df <- data.frame(rbind(
+  train_cvb2_2_df,
+  train_cvb2_1_df,
+  train_cvb2_0_df
+))
+
+# Let's train the Decision Tree classifier
+train_rpart <- train(cvb2 ~ cd4b1 + cd4b2, 
+                     data=train_df, method="rpart", 
                      trControl=fitControl, 
                      tuneGrid=rpart_grid)
+
 train_rpart
 ```
 
-<!-- Ici note modèle n'est pas très performant. La précision de notre classifieur est encore plus faible lorsqu'il s'agit des variables `cd4b1`, `cd4b2` et `cvb2`. On décide de remplacer les valeurs manquantes grâce à une loi de probabilité. -->
