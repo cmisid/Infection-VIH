@@ -8,7 +8,8 @@ output: html_document
 # Importation des données
 
 ```{r, echo=FALSE}
-setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/")
+#setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/")
+setwd(dir = "/Users/ismailaddou/Documents/R/Infection-VIH") #Ismail
 ```
 
 
@@ -34,6 +35,7 @@ base_vih <- read_csv("data/base_vih.csv",
             "1")), sida = col_factor(levels = c("0", 
             "1")), typetrt = col_factor(levels = c("0", 
             "1", "2"))))
-View(base_vih)
+
+write.table(base_vih, file='base_vih.csv')
 ```
 
