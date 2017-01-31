@@ -5,7 +5,9 @@ date: "1/30/2017"
 output: html_document
 ---
 
-# Importation des données
+# Traitement des données manquantes
+
+## Importation des données
 
 ```{r, echo=FALSE}
 setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/") # Axel
@@ -89,8 +91,79 @@ df_sida_sero_trt <- base_vih_df %>%
 ```
 
 ```{r}
+library(ggplot2)
 ggplot(data=df_sida_sero_trt, aes(x = delta_days, y = sida)) + geom_point()
 ```
 
 Au vu de cette visualisation, nous ne pouvons pas confirmer notre hypothèse. Nous n'avons pas par exemple un large nombre d'individus atteints du sida avec un delta faible (nombre de jours entre le début de la séropositivité et la date de début du traitement).
 
+On décide de mettre en place un apprentissage statistique pour remplacer les modalités du facteur `sida`.
+
+```{r}
+library(caret)
+
+# Specify cross validation tuning
+fitControl <- trainControl(method = "cv", 
+                           number = 10)
+
+rpart_grid <- expand.grid(.cp=0.2)
+
+# Ici on a effectué du surapprentissage
+# On veut avoir autant de tuples ou sida = 1 que de tuples ou sida = 0
+
+
+train_sida1_df <- base_vih_df[base_vih_df$sida == "1",] %>%
+  na.omit(sida)
+
+train_sida0_df <- base_vih_df[base_vih_df$sida == "0",] %>%
+  na.omit(sida) 
+train_sida0_df <- sample_n(train_sida0_df, size = nrow(train_sida1_df))
+  
+train_df <- data.frame(rbind(
+  train_sida0_df,
+  train_sida1_df
+))
+
+train_rpart <- train(sida ~ age + sexe + observ + conta + typetrt + arret_trt, 
+                     data=train_df, method="rpart", 
+                     trControl=fitControl, 
+                     tuneGrid=rpart_grid)
+train_rpart
+```
+
+```{r}
+test_df <- base_vih_df[which(is.na(base_vih_df$sida)),]
+
+preds <- predict(train_rpart, test_df, type="prob")
+unique(preds)
+```
+Ici nous constatons que nous avons prédit que tous nos individus séropositifs n'avaient pas le sida.
+Il nous faut maintenant récupérer l'index des lignes à remplacer dans le tableau `base_vih_df`.
+
+```{r}
+na_index <- which(is.na(base_vih_df$sida))
+base_vih_df$sida[na_index] <- 1
+```
+
+## Stratégie d'interpolation pour les facteurs liés au CD4
+
+On s'intéresse ensuite à la variable `cvb2` qui correspond à la charge virale à l'arrêt du traitement ou à la fin du suivi sans arrêt car c'est la variable avec la plus grande proportion de valeurs manquantes ($\sim 25\%$).
+
+```{r}
+fitControl <- trainControl(method = "cv", 
+                           number = 10)
+
+rpart_grid <- expand.grid(.cp=0.4)
+
+train_df <- base_vih_df[which(!is.na(base_vih_df$cd4b1)),]
+test_df <- base_vih_df[which(is.na(base_vih_df$cd4b1)),]
+
+train_rpart <- train(cd4b1 ~ age + sexe + observ + + conta + typetrt + debtrtc,
+                     data=train_df, 
+                     method="rpart", 
+                     trControl=fitControl, 
+                     tuneGrid=rpart_grid)
+train_rpart
+```
+
+<!-- Ici note modèle n'est pas très performant. La précision de notre classifieur est encore plus faible lorsqu'il s'agit des variables `cd4b1`, `cd4b2` et `cvb2`. On décide de remplacer les valeurs manquantes grâce à une loi de probabilité. -->
