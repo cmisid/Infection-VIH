@@ -12,7 +12,7 @@ Dans un premier temps nous ajoutons une colonne de booléans qui prend la valeur
 library(readr)
 base_vih <- read_csv("data/base_vih.csv", 
     col_types = cols(age = col_factor(levels = c("0", 
-        "1", "2", "3", "4")), cd4b1 = col_factor(levels = c("0", 
+        "1", "2", "3")), cd4b1 = col_factor(levels = c("0", 
         "1", "2")), cd4b2 = col_factor(levels = c("0", 
         "1", "2")), conta = col_factor(levels = c("0", 
         "1", "2", "3")), cvb1 = col_factor(levels = c("0", 
@@ -34,10 +34,10 @@ base_vih <- read_csv("data/base_vih.csv",
 
 
 ```{r}
-vih = base_vih
+vih = base_vih  
+vih["is_arret"] = is.na(vih$d_arret)
+vih<-vih[!(is.na(vih$sida) | is.na(vih$cd4b1) | is.na(vih$cd4b2) | is.na(vih$cvb1) | is.na(vih$cvb2)),]
 attach(vih)
-is_arret = is.na(d_arret)
-vih["is_arret"] = is_arret
 ```
 
 ## Description des données
@@ -136,7 +136,7 @@ chisq.test(x)
 ## Analyse de la variance
 
 ### Analyse à un facteur 
-
+Nous allons effectuer l'analyse de la variance à un seul facteur dans cette partie pour chacune des variables par rapport à notre variable réponse ìs_arret`.
 ```{r}
 options(contrats=c("contr.SAS","contr.SAS")) 
 
@@ -162,10 +162,10 @@ aov.conta = aov(is_arret ~ conta)
 summary(aov.conta) 
 ```
 
-### Analyse à deux facteurs
+### Regression logistique
 
 ```{r}
-reg.log = glm(is_arret ~ typetrt + age + observ + sida + sexe + conta + cd4b1 + cd4b2 + cvb1 + cvb2 )
+reg.log = glm(vih$is_arret ~ vih$typetrt + vih$age + vih$observ + vih$sida + vih$sexe + vih$conta + vih$cd4b1 + vih$cd4b2 + vih$cvb1 + vih$cvb2)
 anova(reg.log, test = "Chisq")
 summary(reg.log)
 ```
@@ -173,6 +173,10 @@ summary(reg.log)
 reg.log.backward = step(reg.log, direction = "backward")
 anova(reg.log.backward, test="Chisq")
 summary(reg.log.backward)
+```
+L'analyse suivante nous aidera a descerné les valeurs des facteurs qui mène un individu à arrêter son traitement. On observe que suivre le type de traitement 2 multiplie le risque d'arrêter le traitement par 0.82, et on observe aussi que le risque des patients dont le cvb2 appartient à la tranche 1 ou 2, est multiplié par 0,75 par rapport aux patients qui appartiennent à la tranche 0.
+```{r}
+ exp(cbind(OR = coef(reg.log.backward), confint(reg.log.backward)))
 ```
 
 

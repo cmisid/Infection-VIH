@@ -9,9 +9,9 @@ output: html_document
 
 ## Importation des données
 
-```{r, echo=FALSE}
-setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/") # Axel
-# setwd(dir = "/Users/ismailaddou/Documents/R/Infection-VIH") #Ismail
+```{r, echo=FALSE} 
+#setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/")
+setwd(dir = "/Users/ismailaddou/Documents/R/Infection-VIH") #Ismail
 ```
 
 
@@ -109,7 +109,9 @@ fitControl <- trainControl(method = "cv",
 
 rpart_grid <- expand.grid(.cp=0.2)
 
+# Ici on a effectué du surapprentissage
 # On veut avoir autant de tuples ou sida = 1 que de tuples ou sida = 0
+
 
 train_sida1_df <- base_vih_df[base_vih_df$sida == "1",] %>%
   na.omit(sida)
@@ -123,7 +125,7 @@ train_df <- data.frame(rbind(
   train_sida1_df
 ))
 
-train_rpart <- train(sida ~ cd4b1 + cvb1 + cvb2 + sexe, 
+train_rpart <- train(sida ~ age + sexe + observ + conta + typetrt + arret_trt, 
                      data=train_df, method="rpart", 
                      trControl=fitControl, 
                      tuneGrid=rpart_grid)
@@ -133,10 +135,10 @@ train_rpart
 ```{r}
 test_df <- base_vih_df[which(is.na(base_vih_df$sida)),]
 
-preds <- predict(train_rpart, test_df, type="prob") %>%
-  mutate(dominant_class=ifelse())
+preds <- predict(train_rpart, test_df, type="raw")
+preds
 ```
-Ici nous constatons que nous avons réussi à estimer la modalité pour le facteur `sida` pour l'ensemble des valeurs manquantes.
+Ici nous constatons que nous avons prédit que tous nos individus séropositifs n'avaient pas le sida.
 Il nous faut maintenant récupérer l'index des lignes à remplacer dans le tableau `base_vih_df`.
 
 ```{r}
