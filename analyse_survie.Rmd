@@ -1,0 +1,21 @@
+---
+title: "Analyse de survie"
+author: "Axel Bellec"
+date: "2/2/2017"
+output: html_document
+---
+
+**TODO**
+- Faire le tableau mais à des dates particulières par exemple tous les 6 mois, ou sinon en fonction des probas (pas de 0.1 en 0.1 par exemple).
+  + calculer le complémentaire de `survival`
+
+Tableau de résultat: Passer à la semaine ou au mois  
+
+- Construire la courbe de survie.
+  + intervalles de confiances pour le global
+
+Taux d'évênement au cours du temps  
+Bivarié: test du log-rank  
+Multivarié: modèle de Cox
+
+# Modélisation longitudinale par des méthodes d'analyse de survie
