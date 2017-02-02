@@ -49,7 +49,7 @@ On décide d'ajouter une variable booléene pour savoir si la personne atteinte 
 ```{r}
 library(dplyr)
 base_vih_df <- base_vih %>%
-    mutate(arret_trt=ifelse(is.na(d_arret), TRUE, FALSE))
+    mutate(arret_trt=ifelse(is.na(d_arret), FALSE, TRUE))
 rm(base_vih)
 ```
 
