@@ -45,6 +45,7 @@ On décide d'ajouter une variable booléene pour savoir si la personne atteinte 
 library(dplyr)
 base_vih_df <- base_vih %>%
     mutate(arret_trt=ifelse(is.na(d_arret), TRUE, FALSE))
+rm(base_vih)
 ```
 
 ## Visualisation des valeurs manquantes
@@ -74,6 +75,47 @@ Afin de traiter ces données manquantes, plusieurs stratégies sont possibles :
 - Supprimer les lignes avec des données manquantes
 - Interpoler une classe pour chaque variable factorielle avec donnée manquante
 
+On décide de supprimer les lignes ou il y a des valeurs manquantes pour les facteurs :  
+- `sida`
+- `cd4b1`
+- `cd4b2`
+- `cvb1`
+- `cvb2`
+
+
+```{r}
+# We do not want to consider d_arret and motif because NaN values are logic
+not_to_consider <- c("d_arret", "motif")
+
+# Get the index of NaN values for each factor
+find_index_for_NaN_combinations <- function(nb_comb) {
+  return (
+    as.vector(
+      which(rowSums(is.na(base_vih_df[, !(names(base_vih_df) %in% not_to_consider)])) == nb_comb)
+    )
+  )
+}
+
+
+# Then, we can delete those items
+base_vih_df <- base_vih_df[-find_index_for_NaN_combinations(5),]
+```
+
+```{r}
+aggr(base_vih_df[col_with_missing_values], combined=FALSE)
+```
+
+
+On décide de retirer également les enregistrements pour lesquels nous avons 4 modalités manquantes.
+
+```{r}
+base_vih_df <- base_vih_df[-find_index_for_NaN_combinations(4),]
+base_vih_df <- base_vih_df[-find_index_for_NaN_combinations(3),]
+base_vih_df <- base_vih_df[-find_index_for_NaN_combinations(2),]
+aggr(base_vih_df[col_with_missing_values])
+```
+
+
 ## Stratégie d'interpolation pour le facteur lié au sida
 
 Il est étonnant que nous ayons des valeurs manquantes pour le facteur `sida`.
@@ -98,6 +140,11 @@ ggplot(data=df_sida_sero_trt, aes(x = delta_days, y = sida)) + geom_point()
 
 Au vu de cette visualisation, nous ne pouvons pas confirmer notre hypothèse. Nous n'avons pas par exemple un large nombre d'individus atteints du sida avec un delta faible (nombre de jours entre le début de la séropositivité et la date de début du traitement).
 
+```{r, include=FALSE}
+rm(df_sida_sero_trt)
+```
+
+
 On décide de mettre en place un apprentissage statistique pour remplacer les modalités du facteur `sida`.
 
 ```{r}
@@ -114,7 +161,7 @@ train_sida1_df <- base_vih_df[base_vih_df$sida == "1",] %>%
   na.omit(sida)
 # Then we sample our original dataframe to avoid over-sampling
 train_sida0_df <- base_vih_df[base_vih_df$sida == "0",] %>%
-  na.omit(sida) 
+  na.omit(sida)
 train_sida0_df <- sample_n(train_sida0_df, size = nrow(train_sida1_df))
 
 # We build our test dataset
@@ -123,13 +170,12 @@ train_df <- data.frame(rbind(
   train_sida1_df
 ))
 
-# Let's train the Decision Tree classifier
-train_rpart <- train(sida ~ cd4b1 + cvb1 + cvb2 + sexe, 
-                     data=train_df, method="rpart", 
-                     trControl=fitControl, 
-                     tuneGrid=rpart_grid)
+# # Let's train the Decision Tree classifier
+train_rpart <- train(sida ~ age + sexe + observ + conta + typetrt + arret_trt + debtrtc, data=train_df,
+method="rpart", trControl=fitControl, tuneGrid=rpart_grid)
 train_rpart
 ```
+
 
 ```{r}
 # Build the test dataset containing our NaN values for sida
@@ -149,14 +195,25 @@ for (i in 1:length(na_index)) {
 }
 ```
 
-## Stratégie d'interpolation pour les facteurs liés à la charge virale
+```{r, include=FALSE}
+rm(train_rpart, train_df, fitControl, rpart_grid, train_sida0_df, train_sida1_df, test_df, preds, na_index)
+```
 
-On s'intéresse ensuite à la variable `cvb2` qui correspond à la charge virale à l'arrêt du traitement ou à la fin du suivi sans arrêt car c'est la variable avec la plus grande proportion de valeurs manquantes ($\sim 25\%$). On décide d'adopter la même stratégie que pour le facteur `sida`
+## Stratégie d'interpolation pour les facteurs liés au taux de CD4 et de charge virale
+
+### Remplacement des valeurs manquantes pour CD4 à l'initiation du traitement
+
+Nous avons ici 210 données manquantes pour le facteur `cd4b1`. Nous décidons de mettre en oeuvre une méthode d'apprentissage pour remplacer les valeurs manquantes.
+```{r}
+summary(base_vih_df$cd4b1)
+```
+
+On décide d'ajouter le délai entre le début traitement du malade et la date de séropositivité.
 
 ```{r}
-table(base_vih_df$cvb2)
+base_vih_df <- base_vih_df %>% 
+  mutate(delta_dtrt_dsero = d_debtrt - d_sero)
 ```
-Les 3 modalités de la variable `cvb2` ne sont pas représentées de la même manière. Le nombre d'individus ayant une charge virale (à l'arrêt du traitement ou fin du suivi) est comprise entre $1.7$ et $4$ est sous représentée. On a 111 observations. Nous allons donc construire un jeu de test avec au maximum 111 observations (mais il faudra retirer les valeurs manquantes pour chaque modalité).
 
 ```{r}
 library(caret)
@@ -166,29 +223,146 @@ fitControl <- trainControl(method = "cv",
                            number = 10)
 rpart_grid <- expand.grid(.cp=0.2)
 
-train_cvb2_2_df <- base_vih_df[base_vih_df$cvb2 == "2",] %>%
-  na.omit(cvb2) 
+# We want to have a train dataset containing as much tuples for sida=1 than sida=0
+# We filter our original dataframe to keep only people with AIDS
+train_sida1_df <- base_vih_df[base_vih_df$sida == "1",] %>%
+  na.omit(sida)
 
-train_cvb2_1_df <- base_vih_df[base_vih_df$cvb2 == "1",] %>%
-  na.omit(cvb2) 
-train_cvb2_1_df <- sample_n(train_cvb2_1_df, size = nrow(train_cvb2_2_df))
+# Then we sample our original dataframe to avoid over-sampling
+train_sida0_df <- base_vih_df[base_vih_df$sida == "0",] %>%
+  na.omit(sida) 
+train_sida0_df <- sample_n(train_sida0_df, size = nrow(train_sida1_df))
 
-train_cvb2_0_df <- base_vih_df[base_vih_df$cvb2 == "0",] %>%
-  na.omit(cvb2) 
-train_cvb2_0_df <- sample_n(train_cvb2_0_df, size = nrow(train_cvb2_2_df))
-
+# We build our test dataset
 train_df <- data.frame(rbind(
-  train_cvb2_2_df,
-  train_cvb2_1_df,
-  train_cvb2_0_df
+  train_sida0_df,
+  train_sida1_df
 ))
 
 # Let's train the Decision Tree classifier
-train_rpart <- train(cvb2 ~ cd4b1 + cd4b2, 
-                     data=train_df, method="rpart", 
-                     trControl=fitControl, 
-                     tuneGrid=rpart_grid)
+train_rpart <- train(cd4b1 ~ sida + delta_dtrt_dsero + debtrtc + age + sexe + observ + conta, 
+   data=train_df, method="rpart", 
+   trControl=fitControl, 
+   tuneGrid=rpart_grid)
 
 train_rpart
 ```
 
+```{r}
+# Build the test dataset containing our NaN values for cd4b1
+test_df <- base_vih_df[which(is.na(base_vih_df$cd4b1)),]
+# Classification step
+preds <- predict(train_rpart, test_df, type="raw")
+preds
+```
+
+```{r}
+# List of indexes where the modality for `cd4b1` is NaN
+na_index <- which(is.na(base_vih_df$cd4b1))
+# For each index, find the value in predictions array and assign it to our previous NaN value
+for (i in 1:length(na_index)) {
+ base_vih_df$cd4b1[na_index[i]] <- preds[i] 
+}
+```
+
+```{r, include=FALSE}
+rm(train_rpart, train_df, fitControl, rpart_grid, train_sida0_df, train_sida1_df, test_df, preds, na_index)
+```
+
+### Remplacement des valeurs manquantes pour le taux de charge virale à l'initiation du traitement
+
+On s'intéresse ensuite à la variable `cvb1` qui correspond à la charge virale au début du traitement. C'est la variable avec la plus grande proportion de valeurs manquantes ($\sim 25\%$). On décide d'adopter la même stratégie que pour le facteur `sida`.
+
+```{r}
+summary(base_vih_df$cvb1)
+```
+
+```{r}
+library(caret)
+
+# Specify cross validation tuning
+fitControl <- trainControl(method = "cv", 
+                           number = 10)
+rpart_grid <- expand.grid(.cp=0.2)
+
+# We want to have a train dataset containing as much tuples for sida=1 than sida=0
+# We filter our original dataframe to keep only people with AIDS
+train_sida1_df <- base_vih_df[base_vih_df$sida == "1",] %>%
+  na.omit(sida)
+
+# Then we sample our original dataframe to avoid over-sampling
+train_sida0_df <- base_vih_df[base_vih_df$sida == "0",] %>%
+  na.omit(sida) 
+train_sida0_df <- sample_n(train_sida0_df, size = nrow(train_sida1_df))
+
+# We build our test dataset
+train_df <- data.frame(rbind(
+  train_sida0_df,
+  train_sida1_df
+))
+
+# Let's train the Decision Tree classifier
+train_rpart <- train(cvb1 ~ sida + delta_dtrt_dsero + debtrtc + age + sexe + observ + conta, 
+   data=train_df, method="rpart", 
+   trControl=fitControl, 
+   tuneGrid=rpart_grid)
+
+train_rpart
+```
+
+```{r}
+# Build the test dataset containing our NaN values for cd4b1
+test_df <- base_vih_df[which(is.na(base_vih_df$cvb1)),]
+# Classification step
+preds <- predict(train_rpart, test_df, type="raw")
+preds
+```
+
+### Remplacement des valeurs manquantes pour le taux de charge virale à l'arrêt du traitement
+
+La variable `cvb2` qui correspond à la charge virale à l'arrêt du traitement ou à la fin du suivi sans arrêt car c'est la variable avec la plus grande proportion de valeurs manquantes ($\sim 25\%$). On décide d'adopter la même stratégie que pour le facteur `sida`.
+
+```{r}
+summary(base_vih_df$cvb2)
+```
+
+```{r}
+library(caret)
+
+# Specify cross validation tuning
+fitControl <- trainControl(method = "cv", 
+                           number = 10)
+rpart_grid <- expand.grid(.cp=0.2)
+
+# We want to have a train dataset containing as much tuples for sida=1 than sida=0
+# We filter our original dataframe to keep only people with AIDS
+train_sida1_df <- base_vih_df[base_vih_df$sida == "1",] %>%
+  na.omit(sida)
+
+# Then we sample our original dataframe to avoid over-sampling
+train_sida0_df <- base_vih_df[base_vih_df$sida == "0",] %>%
+  na.omit(sida) 
+train_sida0_df <- sample_n(train_sida0_df, size = nrow(train_sida1_df))
+
+# We build our test dataset
+train_df <- data.frame(rbind(
+  train_sida0_df,
+  train_sida1_df
+))
+
+# Let's train the Decision Tree classifier
+train_rpart <- train(cvb2 ~ sida + delta_dtrt_dsero + debtrtc + age + sexe + observ + conta, 
+   data=train_df, method="rpart", 
+   trControl=fitControl, 
+   tuneGrid=rpart_grid)
+
+train_rpart
+```
+
+```{r}
+# Build the test dataset containing our NaN values for cd4b1
+test_df <- base_vih_df[which(is.na(base_vih_df$cvb2)),]
+# Classification step
+preds <- predict(train_rpart, test_df, type="raw")
+preds
+```

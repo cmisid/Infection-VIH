@@ -1,0 +1,12 @@
+---
+title: "Analyse de survie"
+author: "Axel Bellec"
+date: "2/2/2017"
+output: html_document
+---
+
+**TODO**
+- Faire le tableau mais à des dates particulières par exemple tous les 6 mois, ou sinon en fonction des probas (pas de 0.1).
+- Construire la courbe de survie.
+
+# Modélisation longitudinale par des méthodes d'analyse de survie
