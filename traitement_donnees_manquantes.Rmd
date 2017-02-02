@@ -271,7 +271,7 @@ summary(base_vih_df$cd4b2)
 Ici nous n'avons que 2 valeurs manquantes donc nous allons mettre en place une stratégie d'apprentissage pour les remplacer.
 
 ```{r}
-train_rpart <- learn("cd4b2", c("sida", "typetrt", "delta_dtrt_dsero", "debtrtc", "observ"))
+train_rpart <- learn("cd4b2", c("sida", "typetrt", "delta_dtrt_dsero", "debtrtc", "observ", "cd4b1"))
 ```
 
 ```{r}
@@ -349,6 +349,6 @@ clean_workspace()
 ## Sauvegarde du jeu de données nettoyé
 
 ```{r}
-# write.csv(base_vih_df, file = "base_vih_df_cleaned.csv", row.names=FALSE)
+save(base_vih_df, file="base_vih_df_cleaned.RData")
 ```
 
