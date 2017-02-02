@@ -7,6 +7,10 @@ output: html_document
 
 **TODO**
 - Faire le tableau mais à des dates particulières par exemple tous les 6 mois, ou sinon en fonction des probas (pas de 0.1 en 0.1 par exemple).
+  + calculer le complémentaire de `survival`
+
 - Construire la courbe de survie.
+  + intervalles de confiances pour le global
+  + par groupe
 
 # Modélisation longitudinale par des méthodes d'analyse de survie
