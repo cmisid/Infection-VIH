@@ -18,7 +18,7 @@ setwd(dir = "/home/formationsid/Documents/Github")
 library("readr")
 base_vih <- read_csv("data/base_vih.csv", 
     col_types = cols(age = col_factor(levels = c("0", 
-        "1", "2", "3", "4")), cd4b1 = col_factor(levels = c("0", 
+        "1", "2", "3")), cd4b1 = col_factor(levels = c("0", 
         "1", "2")), cd4b2 = col_factor(levels = c("0", 
         "1", "2")), conta = col_factor(levels = c("0", 
         "1", "2", "3")), cvb1 = col_factor(levels = c("0", 
@@ -62,18 +62,371 @@ observ = summary(base_vih$observ)*100/1136
 observ
 barplot(observ, ylim=c(0,80), xlab="observance ou non des patients", ylab="Fréquence (en %)", main="Proportion de patients en fonction de d'une observence ou non")
 ```
-Environ 4 patients sur 5, 79.4%, ne suivent pas leur traitement correctement.
+
+Environ 4 patients sur 5, 79.4%, ne suit pas leur traitement correctement.
 
 ```{r}
-sida = summary(base_vih$sida)*100/1136
+sidana = summary(base_vih$sida)
+sidana[3]*100/1136
+```
+
+Pour près de 4% des patients on ne connaît pas leur stade d'avancement.
+
+```{r}
+sida=sidana[1:2]*100/(1136-sidana[3])
 sida
 barplot(sida, ylim=c(0,100), xlab="Sida", ylab="Fréquence (en %)", main="Proportion de patients ayant atteint le stade du sida")
 ```
-13% des patient atteint par le VIH ont atteint le stade du SIDA, plus 4% dont on igniore le stade.
+
+13,82% des patients atteints par le VIH ont atteint le stade du SIDA.
 
 ```{r}
 conta = summary(base_vih$conta)*100/1136
 conta
 barplot(conta, ylim=c(0,50), xlab="Mode de contamination", ylab="Fréquence (en %)", main="Proportion de patients suivant le mode de contamination")
 ```
-Plus de quatre patients sur cinq sont contaminé par 
+
+Plus de quatre patients sur cinq sont contaminé par voie sexuelle (48,59% hétérosexuel et 34,24% homo/bisexuel). Un peu plus de 7% par voie intraveineuse.
+
+```{r}
+typetrt = summary(base_vih$typetrt)*100/1136
+typetrt
+barplot(typetrt, ylim=c(0,40), xlab="Type de traitement reçu", ylab="Fréquence (en %)", main="Proportion de patients par type de traitement reçu")
+```
+
+35% des patients ont reçu le traitement 2IN+1IP, un tier le 2IN+INN.
+
+```{r}
+cd4b1na = summary(base_vih$cd4b1)
+cd4b1na[4]*100/1136
+```
+
+Pour 18% des patients, on n'a pas le niveau de cd4 au début du traitement.
+
+```{r}
+cd4b1=cd4b1na[1:3]*100/(1136-cd4b1na[4])
+cd4b1
+barplot(cd4b1, ylim=c(0,50), xlab="Niveau de CD4 au début du traitement", ylab="Fréquence (en %)", main="Proportion de patients par niveau de CD4 au début du traitement")
+```
+
+Pour les patients ayant un niveau de CD4 connu au début du traitement, deux sur cinq ont leur niveau de CD4 est inférieur à 200. Un tier a un niveau compris entre 200 et 350. Et un quart au-dessus de 350.
+
+```{r}
+cd4b2na = summary(base_vih$cd4b2)
+cd4b2na[4]*100/1136
+```
+
+Pour 10% des patients, on n'a pas le niveau de cd4 à l'arrêt du traitement ou fin du suivi.
+
+```{r}
+cd4b2=cd4b2na[1:3]*100/(1136-cd4b2na[4])
+cd4b2
+barplot(cd4b2, ylim=c(0,60), xlab="Niveau de CD4 à l'arrêt du traitement ou fin du suivit", ylab="Fréquence (en %)", main="Proportion de patients par niveau de CD4 à l'arrêt du traitement ou fin du suivit")
+```
+
+Quand le niveau est connu, plus d'un patient sur deux, 57.2%, à un niveau de CD4 supérieur à 350 à la fin de leur suivi. Près d'un patient sur quatre à un niveau entre 200 et 350 de CD4. Et 18% des patients ont un niveau inférieur à 200 CD4.
+
+```{r}
+cvb1na=summary(base_vih$cvb1)
+cvb1na[4]*100/1136
+```
+
+Pour plus d'un patient sur quatre, on n'a pas de valeur de la charge virale au début du traitement.
+
+```{r}
+cvb1=cvb1na[1:3]*100/(1136-cvb1na[4])
+cvb1
+barplot(cvb1, ylim=c(0,40), xlab="Charge virale au début du traitement", ylab="Fréquence (en %)", main="Proportion de patients en fonction de la charge viral au début du traitement")
+```
+
+Lorsque le taux est connu, plus de trois patients sur quatre à une charge virale élevée, 38.8% entre 4 et 5, 38.1% au-dessus de 5. Moins d'un quart des patients a une charge inférieure à 4.
+
+```{r}
+cvb2na=summary(base_vih$cvb2)
+cvb2na[4]*100/1136
+```
+
+Pour environ 15% des patients, la charge virale à la fin du traitement ou suivi est inconnue.
+
+```{r}
+cvb2=cvb2na[1:3]*100/(1136-cvb2na[4])
+cvb2
+barplot(cvb2, ylim=c(0,60), xlab="Charge virale à la fin du traitement", ylab="Fréquence (en %)", main="Proportion de patients en fonction de la charge viral à la fin du traitement")
+```
+
+Pour les patients dont la charge virale est connue, 57% ont une charge inférieure à 1.7, trois patients sur dix entre 1.7 et 4. Et 11% d'entre eux a une charge supérieure à 4.
+
+
+```{r}
+motifna=summary(base_vih$motif)
+motifna[6]*100/1136
+motifna
+```
+
+Seulement 31,69% des patients ont continué leur traitement, au moins jusqu'au 30 juin 2008.
+
+```{r}
+motif=motifna[1:5]*100/(1136-motifna[6])
+motif
+barplot(motif, ylim=c(0,40), xlab="Motif d'arrêt du traitement", ylab="Fréquence (en %)", main="Proportion de patients en fonction de leur motif d'arrêt du traitement")
+```
+
+La première cause d'arrêt du traitement est l'intolérance/toxicité, 34%. 17,5% des patients ont un traitement simplifié. Pour 13% des patients l'arrêt est dû à un échec thérapeutique.
+
+
+Le profil type d'un patient est une femme ayant entre 30 et 40 ans, étant contaminé par voit sexuelle (hétérosexuelle) mais n'ayant pas atteint le stade du sida. Elle a reçu le traitement 2 IN+1 IP mais ne le suit pas correctement. Son niveau de CD4 passes de moins de 200 à plus de 350 durant le traitement, sa charge virale diminue, passant de 4-5 à moins de 1,7. Elle a tendance à arrêter son traitement pour intolérance/toxicité.
+
+
+## Analyse des types d'arrêt
+
+### Type de motif d'arrêt en fonction du traitement
+
+```{r}
+tableau=addmargins(table(base_vih$typetrt,base_vih$motif), margin = 1)
+tableau
+prop.table(tableau,1)*100
+barplot(t(prop.table(tableau[1:3,],1)*100),legend.text = TRUE, beside = TRUE, xlab="type de traitement", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du traitement suivi")
+```
+
+Le traitement 2IN+INN à une moins bonne tolérance contraierement aux autres traitements. Pour le traitement 2IN+INN, on retrouve peu d'échec thérapeutique mais plus souvent un simplification du traitement. Les patients prenant un autre traitement arrêtent plus souvent dû à un echec thérapeutique.
+
+On va test le lien entre le motif d'arrêt et le type de traitement pris.
+
+```{r}
+chisq.test(tableau)
+```
+
+On retrouve un lien significatif entre le motif d'arrêt et le type de traitement pris.
+
+### Motif d'arrêt en fonction du sexe du patient
+
+```{r}
+tableau2=addmargins(table(base_vih$sexe,base_vih$motif), margin = 1)
+tableau2
+prop.table(tableau2,1)*100
+barplot(t(prop.table(tableau2[1:2,],1)*100),legend.text = TRUE, beside = TRUE, xlab="type de traitement", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du sexe du patient")
+```
+
+Les hommes arrêtent leur traitement plus souvent pour d'autres raison que les femmes, 34% contre 25%. Sinon que le patients soit une femme ou un homme les proportions d'arrêts sont presque identique quelque soit le motif. 
+
+Test de la liaison entre le motif d'arrêt et le sexe du patient.
+
+```{r}
+chisq.test(tableau2)
+```
+
+Le sexe du patient n'a pas de lien significatif avec le motif d'arrêt
+
+### Motif d'arrêt en fonction de la classe d'âge
+
+```{r}
+tableau3=addmargins(table(base_vih$age,base_vih$motif), margin=1)
+tableau3
+prop.table(tableau3,1)*100
+barplot(t(prop.table(tableau3[1:4,],1)*100),legend.text = TRUE, beside = TRUE, xlab="classe d'âge", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction de l'âge du patient")
+```
+
+Les patients jeunes, 18-30 ans, arrêtent bien moins souvent pour une intolérance au traitement contrairement aux plus âgés, 50-60 ans (25% des jeunes contre 49% des patients âgés). Par contre on peut remarquer 12% des jeunes arrêtent le traitement car ils ne le suivent pas correctement contre moins de 2% des 50-60 ans. Un patient sur cinq de plus de 40 ans arrêtent le suivi par une simplification du traitement, chez les moins de 30 ans moins de 10% des arrêts sont dû à une simplification. Les 30-40 qui arrêtent le font plus souvent pour une échec thérapeutique que la moyenne contrairement aux jeunes. Les deux jeunes sur cinq ne font plus le suivi pour d'autres raison, moins de 15% du temps chez les 50-60 ans, contre un patient sur quatre en moyenne.
+
+Test du lien entre le motif d'arrêt et le classe d'âge. On regroupe les pb d'observence avec les autres car nous manquons d'individu.
+
+```{r}
+tableau3c=tableau3[,1:4]
+tableau3c[1,4] = tableau3c[1,4] + tableau3[1,5]
+tableau3c[2,4] = tableau3c[2,4] + tableau3[2,5]
+tableau3c[3,4] = tableau3c[3,4] + tableau3[3,5]
+tableau3c[4,4] = tableau3c[4,4] + tableau3[4,5]
+tableau3c[5,4] = tableau3c[5,4] + tableau3[5,5]
+tableau3c
+chisq.test(tableau3c)
+```
+
+La classe d'âge est lié significativement avec le motif d'arrêt.
+
+### Motif d'arrêt en fonction de l'observance du patient
+
+```{r}
+tableau4=addmargins(table(base_vih$observ,base_vih$motif), margin = 1)
+tableau4
+prop.table(tableau4,1)*100
+barplot(t(prop.table(tableau4[1:2,],1)*100),legend.text = TRUE, beside = TRUE, xlab="Observance du patient", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction de l'âge l'observance du patient")
+```
+
+Les patients qui suivent leur traitements correctement arrêtent plus souvent le suivi dû à une intolérance ou simplification du traitement mais moins souvent suite à un échec thérapeutique.
+
+```{r}
+chisq.test(tableau4)
+```
+
+Le motif d'arrêt et l'observance du patient sont significativement lié.
+
+### Motif d'arrêt en fonction du stade de la maladie
+
+
+```{r}
+tableau5=addmargins(table(base_vih$sida,base_vih$motif),  margin = 1)
+prop.table(tableau5,1)*100
+barplot(t(prop.table(tableau5[1:2,],1)*100),legend.text = TRUE, beside = TRUE, xlab="stade du patient", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du stade de la maladie du patient")
+```
+
+Les patients ayant atteint le stade du sida ont arrêtaient plus souvent dû a une intolérence ou un échec thérapeutique, respectivement 4.3 et2.3 point au dessus de la moyenne.
+
+On test le lien entre le motif d'arrêt et le stade de la maladie du patient.
+
+```{r}
+chisq.test(tableau5)
+```
+
+Il n'y a pas de liaison significative entre le motif d'arrêt et le stade de la maladie du patient.
+
+### Motif d'arrêt en fonction du type de contamination
+
+```{r}
+tableau6=addmargins(table(base_vih$conta,base_vih$motif), margin = 1)
+prop.table(tableau6,1)*100
+tableau6
+barplot(t(prop.table(tableau6[1:4,],1)*100),legend.text = TRUE, beside = TRUE, xlab="type de contamination", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du type de contamination de la maladie du patient", ylim = c(0,50))
+```
+
+Les patients contaminés par toxico voie intraveineuse arrêtent plus souvent par un échec thérapeutique ou un problème d'observance (5.7 et 4 point au dessus de la moyenne) mais deux fois moins souvent que l'ensemble par simplification du traitement, 9% des cas contre 17.5%. Les patients contaminés par d'autre voie sont arrêtent plus souvent dû a une intolérance, 49% des cas contre 34% en moyenne. En revanche ils stop leur traitement, plus rarement a cause d'un échec thérapeutique ou une simplification de ce traitement.
+
+On test l'indépendance entre le type de contamination et le motif d'arrêt.
+
+```{r}
+chisq.test(tableau6)
+```
+
+
+
+### Motif d'arrêt en fonction du niveau CD4B1
+
+```{r}
+tableau7=addmargins(table(base_vih$cd4b1,base_vih$motif),  margin = 1)
+prop.table(tableau7,1)*100
+tableau7
+barplot(t(prop.table(tableau7[1:3,],1)*100),legend.text = TRUE, beside = TRUE, xlab="type de contamination", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du type de contamination de la maladie du patient", ylim = c(0,50))
+```
+
+Les patients ayant un niveau de CD4 supérieur à 350 ont moins souvent arrêtaient pour intolérance mais plus souvent pour d'autres motif. Dans l'ensemble, il n'y a pas d'écart sur la proportion de motif d'arrêt pour chauqe niveau de CD4 au début du traitement. Cela va être vérifier par un test du khi-deux.
+
+On test donc le lien entre CD4B1 et motif.
+
+```{r}
+chisq.test(tableau7)
+```
+
+On retrouve bien aucun lien significatif entre le niveau de CD4 au début du traitement et le motif d'arrêt.
+
+### Motif d'arrêt en fonction du niveau de CD4 au moment de l'arrêt
+
+```{r}
+tableau8=addmargins(table(base_vih$cd4b2,base_vih$motif), margin = 1)
+prop.table(tableau8,1)*100
+tableau8
+barplot(t(prop.table(tableau8[1:3,],1)*100),legend.text = TRUE, beside = TRUE, xlab="niveau de CD4", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du niveau de CD4 à la fin du traitement du patient", ylim = c(0,50))
+```
+
+Les patients ayant un niveau de CD4 inférieur à 200 ont eu plus souvent un échec thérapeutique, +6%, ou un problème d'observance, +4%, par contre ils ont deux fois moins souvent une simplification du traitement. A l'inverse des patients ayant eu leur niveau de CD4 qui est passé au-dessus de 350.
+
+On test le lien entre CD4B2 et le motif
+
+```{r}
+chisq.test(tableau8)
+```
+
+On retrouve un lien entre le motif d'arrêt et le niveau de CD4 au moment de l'arrêt.
+
+
+### Motif d'arrêt en fonction du type de contamination
+
+
+```{r}
+tableau9=addmargins(table(base_vih$cvb1,base_vih$motif), margin = 1)
+prop.table(tableau9,1)*100
+tableau9
+barplot(t(prop.table(tableau9[1:3,],1)*100),legend.text = TRUE, beside = TRUE, xlab="type de contamination", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du type de contamination de la maladie du patient", ylim = c(0,50))
+```
+
+
+
+```{r}
+chisq.test(tableau9)
+```
+
+
+
+```{r}
+tableau10=addmargins(table(base_vih$cvb2,base_vih$motif), margin = 1)
+prop.table(tableau10,1)*100
+tableau10
+barplot(t(prop.table(tableau10[1:3,],1)*100),legend.text = TRUE, beside = TRUE, xlab="type de contamination", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du type de contamination de la maladie du patient", ylim = c(0,50))
+```
+
+
+
+```{r}
+chisq.test(tableau10)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
