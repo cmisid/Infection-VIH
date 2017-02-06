@@ -204,7 +204,7 @@ On retrouve un lien significatif entre le motif d'arrêt et le type de traitemen
 tableau2=addmargins(table(base_vih$sexe,base_vih$motif), margin = 1)
 tableau2
 prop.table(tableau2,1)*100
-barplot(t(prop.table(tableau2[1:2,],1)*100),legend.text = TRUE, beside = TRUE, xlab="type de traitement", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du sexe du patient")
+barplot(t(prop.table(tableau2[1:2,],1)*100),legend.text = TRUE, beside = TRUE, xlab="type de traitement", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du sexe du patient", ylim = c(0,40))
 ```
 
 Les hommes arrêtent leur traitement plus souvent pour d'autres raison que les femmes, 34% contre 25%. Sinon que le patients soit une femme ou un homme les proportions d'arrêts sont presque identique quelque soit le motif. 
@@ -223,7 +223,7 @@ Le sexe du patient n'a pas de lien significatif avec le motif d'arrêt
 tableau3=addmargins(table(base_vih$age,base_vih$motif), margin=1)
 tableau3
 prop.table(tableau3,1)*100
-barplot(t(prop.table(tableau3[1:4,],1)*100),legend.text = TRUE, beside = TRUE, xlab="classe d'âge", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction de l'âge du patient")
+barplot(t(prop.table(tableau3[1:4,],1)*100),legend.text = TRUE, beside = TRUE, xlab="classe d'âge", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction de l'âge du patient", ylim = c(0,50))
 ```
 
 Les patients jeunes, 18-30 ans, arrêtent bien moins souvent pour une intolérance au traitement contrairement aux plus âgés, 50-60 ans (25% des jeunes contre 49% des patients âgés). Par contre on peut remarquer 12% des jeunes arrêtent le traitement car ils ne le suivent pas correctement contre moins de 2% des 50-60 ans. Un patient sur cinq de plus de 40 ans arrêtent le suivi par une simplification du traitement, chez les moins de 30 ans moins de 10% des arrêts sont dû à une simplification. Les 30-40 qui arrêtent le font plus souvent pour une échec thérapeutique que la moyenne contrairement aux jeunes. Les deux jeunes sur cinq ne font plus le suivi pour d'autres raison, moins de 15% du temps chez les 50-60 ans, contre un patient sur quatre en moyenne.
@@ -249,7 +249,7 @@ La classe d'âge est lié significativement avec le motif d'arrêt.
 tableau4=addmargins(table(base_vih$observ,base_vih$motif), margin = 1)
 tableau4
 prop.table(tableau4,1)*100
-barplot(t(prop.table(tableau4[1:2,],1)*100),legend.text = TRUE, beside = TRUE, xlab="Observance du patient", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction de l'âge l'observance du patient")
+barplot(t(prop.table(tableau4[1:2,],1)*100),legend.text = TRUE, beside = TRUE, xlab="Observance du patient", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction de l'âge l'observance du patient", ylim = c(0,50))
 ```
 
 Les patients qui suivent leur traitements correctement arrêtent plus souvent le suivi dû à une intolérance ou simplification du traitement mais moins souvent suite à un échec thérapeutique.
@@ -266,7 +266,7 @@ Le motif d'arrêt et l'observance du patient sont significativement lié.
 ```{r}
 tableau5=addmargins(table(base_vih$sida,base_vih$motif),  margin = 1)
 prop.table(tableau5,1)*100
-barplot(t(prop.table(tableau5[1:2,],1)*100),legend.text = TRUE, beside = TRUE, xlab="stade du patient", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du stade de la maladie du patient")
+barplot(t(prop.table(tableau5[1:2,],1)*100),legend.text = TRUE, beside = TRUE, xlab="stade du patient", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du stade de la maladie du patient", ylim = c(0,40))
 ```
 
 Les patients ayant atteint le stade du sida ont arrêtaient plus souvent dû a une intolérence ou un échec thérapeutique, respectivement 4.3 et2.3 point au dessus de la moyenne.
@@ -298,13 +298,13 @@ chisq.test(tableau6)
 
 
 
-### Motif d'arrêt en fonction du niveau CD4B1
+### Motif d'arrêt en fonction du niveau CD4 au début du traitement
 
 ```{r}
 tableau7=addmargins(table(base_vih$cd4b1,base_vih$motif),  margin = 1)
 prop.table(tableau7,1)*100
 tableau7
-barplot(t(prop.table(tableau7[1:3,],1)*100),legend.text = TRUE, beside = TRUE, xlab="type de contamination", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du type de contamination de la maladie du patient", ylim = c(0,50))
+barplot(t(prop.table(tableau7[1:3,],1)*100),legend.text = TRUE, beside = TRUE, xlab="niveau de CD4", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du niveau de CD4, au début, du patient", ylim = c(0,40))
 ```
 
 Les patients ayant un niveau de CD4 supérieur à 350 ont moins souvent arrêtaient pour intolérance mais plus souvent pour d'autres motif. Dans l'ensemble, il n'y a pas d'écart sur la proportion de motif d'arrêt pour chauqe niveau de CD4 au début du traitement. Cela va être vérifier par un test du khi-deux.
@@ -323,7 +323,7 @@ On retrouve bien aucun lien significatif entre le niveau de CD4 au début du tra
 tableau8=addmargins(table(base_vih$cd4b2,base_vih$motif), margin = 1)
 prop.table(tableau8,1)*100
 tableau8
-barplot(t(prop.table(tableau8[1:3,],1)*100),legend.text = TRUE, beside = TRUE, xlab="niveau de CD4", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du niveau de CD4 à la fin du traitement du patient", ylim = c(0,50))
+barplot(t(prop.table(tableau8[1:3,],1)*100),legend.text = TRUE, beside = TRUE, xlab="niveau de CD4", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du niveau de CD4, à la fin, du patient", ylim = c(0,40))
 ```
 
 Les patients ayant un niveau de CD4 inférieur à 200 ont eu plus souvent un échec thérapeutique, +6%, ou un problème d'observance, +4%, par contre ils ont deux fois moins souvent une simplification du traitement. A l'inverse des patients ayant eu leur niveau de CD4 qui est passé au-dessus de 350.
@@ -337,23 +337,27 @@ chisq.test(tableau8)
 On retrouve un lien entre le motif d'arrêt et le niveau de CD4 au moment de l'arrêt.
 
 
-### Motif d'arrêt en fonction du type de contamination
+### Motif d'arrêt en fonction dniveau de cv au début du traitement
 
 
 ```{r}
 tableau9=addmargins(table(base_vih$cvb1,base_vih$motif), margin = 1)
 prop.table(tableau9,1)*100
 tableau9
-barplot(t(prop.table(tableau9[1:3,],1)*100),legend.text = TRUE, beside = TRUE, xlab="type de contamination", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du type de contamination de la maladie du patient", ylim = c(0,50))
+barplot(t(prop.table(tableau9[1:3,],1)*100),legend.text = TRUE, beside = TRUE, xlab="charge de CV", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction de la charge virale, au début, du patient", ylim = c(0,40))
 ```
 
+Les patients ayant eux une charge virale "faible" au début du traitement ont été plus tolérent au traitement et ont eux leur traitement simplifier moins souvent que la moyenne, respectivement -11% et -5%. Par contre il y a eu plus d'échec thérapeutique, +4%. Les patientsavec une charge virale très élevés ont eux plus souvent une simplification de leur traitement, +7%.
 
+Test du lien entre la charge virale au début du traitement et le motif d'arrêt.
 
 ```{r}
 chisq.test(tableau9)
 ```
 
+On retrouve un lien significatif entre le motif d'arrêt et la charge virale au début du traitement.
 
+### Motif d'arrêt en fonction dniveau de cv à la fin du traitement
 
 ```{r}
 tableau10=addmargins(table(base_vih$cvb2,base_vih$motif), margin = 1)
@@ -364,69 +368,11 @@ barplot(t(prop.table(tableau10[1:3,],1)*100),legend.text = TRUE, beside = TRUE, 
 
 
 
+Test du lien entre la charge virale à la fin du traitement et le motif d'arrêt.
+
 ```{r}
 chisq.test(tableau10)
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+On retrouve un lien significatif entre ces deux variables.
 
