@@ -99,6 +99,9 @@ summary(fits_trt)
 ```
 
 ```{r}
-ggsurvplot(fits_trt, risk.table = TRUE)
+ggsurvplot(fits_trt, 
+           risk.table = TRUE, 
+           pval = TRUE,
+           break.time.by = 360)
 ```
 
