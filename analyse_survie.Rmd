@@ -142,7 +142,18 @@ La fonction de survie représente la probabilité pour qu'un patient n'est pas a
 ggsurvplot(fits_trt, 
            risk.table = TRUE, 
            pval = TRUE,
-           break.time.by = 360)
+           conf.int = TRUE,
+           break.time.by = 360,
+           xlab = "Time in days",
+           risk.table.y.text.col = T, # colour risk table text annotations.
+           risk.table.y.text = FALSE, # show bars instead of names in text annotations
+           # in legend of risk table.
+           ncensor.plot = TRUE, # plot the number of censored subjects at time t
+           conf.int.style = "step",  # customize style of confidence intervals
+           surv.median.line = "hv",  # add the median survival pointer.
+           legend.labs = c("2IN+1IP", "2IN+INN", "autres"),    # change legend labels.
+           palette =  c("#FF5A5F", "#FFB400", "#007A87")
+)
 ```
 
 On représente la survie de Kaplan-Meier avec en abscisse la durée de suivi et en ordonnée l'estimation de la fonction de survie. On note que le taux d'arrêt de traitement est identique pour les 3 traitements mais sur les 3 premières années l'arrêt est plus tardif pour le traitement 1.
@@ -201,3 +212,4 @@ plot(diag_trt)
 ```
 
 En abscisse nous avons la durée de suivi et en ordonnée nous avons les valeurs des résidus de Schoenfeld.
+

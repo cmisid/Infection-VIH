@@ -9,14 +9,29 @@ output: html_document
 
 ```{r, echo=FALSE}
 
-setwd(dir = "/home/formationsid/Documents/Github")
-# setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/")
+# setwd(dir = "/home/formationsid/Documents/Github")
+setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/")
+```
+
+
+```{r, echo=FALSE}
+library(devtools)
+devtools::install_github("ricardo-bion/ggtech", dependencies=TRUE)
+# Installing fonts
+library(extrafont)
+# Google font
+download.file("http://social-fonts.com/assets/fonts/product-sans/product-sans.ttf", "/Library/Fonts/product-sans.ttf", method="curl")
+font_import(pattern = 'product-sans.ttf', prompt=FALSE)
+# Airbnb fonts
+download.file("https://dl.dropboxusercontent.com/u/2364714/airbnb_ttf_fonts/Circular%20Air-Medium%203.46.45%20PM.ttf", "/Library/Fonts/Circular Air-Medium 3.46.45 PM.ttf", method="curl")
+download.file("https://dl.dropboxusercontent.com/u/2364714/airbnb_ttf_fonts/Circular%20Air-Bold%203.46.45%20PM.ttf", "/Library/Fonts/Circular Air-Bold 3.46.45 PM.ttf", method="curl")
+font_import(pattern = 'Circular', prompt=FALSE)
 ```
 
 
 ```{r}
-library("readr")
-base_vih <- read_csv("data/base_vih.csv", 
+library(readr)
+base_vih <- data.frame(read_csv("data/base_vih.csv", 
     col_types = cols(age = col_factor(levels = c("0", 
         "1", "2", "3")), cd4b1 = col_factor(levels = c("0", 
         "1", "2")), cd4b2 = col_factor(levels = c("0", 
@@ -35,147 +50,284 @@ base_vih <- read_csv("data/base_vih.csv",
             "1")), sexe = col_factor(levels = c("0", 
             "1")), sida = col_factor(levels = c("0", 
             "1")), typetrt = col_factor(levels = c("0", 
-            "1", "2"))))
-View(base_vih)
+            "1", "2")))))
 ```
 
 ## Analyse descriptive
 
 ```{r}
-age = summary(base_vih$age)*100/1136
-age
-barplot(age, ylim=c(0,40), xlab="tranches d'âge des patients", ylab="Fréquences (en %)", main="Proportion de patients par tranche d'âge")
+library(dplyr)
+df_age <- base_vih %>% 
+  mutate(age = factor(age, labels = c("[18;30[", "[30;40[", "[40;50[", "[50;60["))) %>%
+  group_by(age) %>% 
+  summarise(count=n()) %>% 
+  mutate(freq=100*count/sum(count))
+
+library(ggtech)
+library(ggplot2)
+ggplot(df_age, aes(x = factor(age), y = freq, fill = age)) +
+  geom_bar(stat="identity", width = 0.7) +
+  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25) +
+  labs(x = "Tranches d'âge des patients", y = "Fréquences (en %)", fill = "age", title="Proportion de patients", subtitle="par tranche d'âge") + 
+  guides(fill=FALSE) + 
+  theme_tech(theme="airbnb") +
+  scale_fill_tech(theme="airbnb") 
+
+
+df_age
 ```
 
 L'âge des patients varie de 18 à 60 ans. La catégorie 4 [60;+] est vide. La tranche d'âge modale est [30;40], elle représente près de 2 patients sur 5 (39% des patients).
 
 ```{r}
-sexe = summary(base_vih$sexe)*100/1136
-sexe
-barplot(sexe, ylim=c(0,70), xlab="sexe des patients", ylab="Fréquence (en %)", main="Proportion de patients par sexe")
+df_sexe <- base_vih %>%
+  mutate(sexe = factor(sexe, labels = c("femme", "homme"))) %>%
+  group_by(sexe) %>% 
+  summarise(count=n()) %>% 
+  mutate(freq=100*count/sum(count))
+
+df_sexe
+
+ggplot(df_sexe, aes(x = factor(sexe), y = freq, fill = sexe)) +
+  geom_bar(stat="identity", width = 0.7) +
+  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25) +
+  labs(x = "Genre des patients", y = "Fréquences (en %)", fill = "sexe", title="Proportion de patients", subtitle="par genre") + 
+  guides(fill=FALSE) +
+  theme_tech(theme="airbnb") +
+  scale_fill_tech(theme="airbnb") 
 ```
 
 Les femmes représentent deux tiers des patients (770), contre un tier pour les hommes (336).
 
 ```{r}
-observ = summary(base_vih$observ)*100/1136
-observ
-barplot(observ, ylim=c(0,80), xlab="observance ou non des patients", ylab="Fréquence (en %)", main="Proportion de patients en fonction de d'une observence ou non")
+df_observ <- base_vih %>%
+  mutate(observ = factor(observ, labels = c("non", "oui"))) %>%
+  group_by(observ) %>% 
+  summarise(count=n()) %>% 
+  mutate(freq=100*count/sum(count))
+
+
+ggplot(df_observ, aes(x = factor(observ), y = freq, fill = observ)) +
+  geom_bar(stat="identity", width = 0.7) +
+  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25) +
+  labs(x = "Observance", y = "Fréquences (en %)", title="Proportion de patients", subtitle="en fonction de la consultation d'observance") + 
+  guides(fill=FALSE) +
+  theme_tech(theme="airbnb") +
+  scale_fill_tech(theme="airbnb") 
 ```
 
 Environ 4 patients sur 5, 79.4%, ne suit pas leur traitement correctement.
 
 ```{r}
-sidana = summary(base_vih$sida)
-sidana[3]*100/1136
+compute_prop_NaN <- function(var) {
+  return (
+    round(100*sum(is.na(base_vih[var]))/nrow(base_vih), 2)
+  )
+}
+compute_prop_NaN("sida")
 ```
 
 Pour près de 4% des patients on ne connaît pas leur stade d'avancement.
 
 ```{r}
-sida=sidana[1:2]*100/(1136-sidana[3])
-sida
-barplot(sida, ylim=c(0,100), xlab="Sida", ylab="Fréquence (en %)", main="Proportion de patients ayant atteint le stade du sida")
+df_sida <- base_vih %>%
+  mutate(observ = factor(sida, labels = c("non", "oui"))) %>%
+  filter(!is.na(sida)) %>%
+  group_by(sida) %>% 
+  summarise(count=n()) %>% 
+  mutate(freq=100*count/sum(count))
+
+
+ggplot(df_sida, aes(x = factor(sida), y = freq, fill = sida)) +
+  geom_bar(stat="identity", width = 0.7) +
+  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25) +
+  labs(x = "Patient atteint du sida", y = "Fréquences (en %)", title="Proportion de patients", subtitle="ayant atteint le stade du sida") + 
+  guides(fill=FALSE) +
+  theme_tech(theme="airbnb") +
+  scale_fill_tech(theme="airbnb") 
 ```
 
 13,82% des patients atteints par le VIH ont atteint le stade du SIDA.
 
 ```{r}
-conta = summary(base_vih$conta)*100/1136
-conta
-barplot(conta, ylim=c(0,50), xlab="Mode de contamination", ylab="Fréquence (en %)", main="Proportion de patients suivant le mode de contamination")
+df_conta <- base_vih %>%
+  mutate(conta = factor(conta, labels = c("hétérosexuel", "homo/bisexuel", "voie intraveineuse", "autres"))) %>%
+  filter(!is.na(conta)) %>%
+  group_by(conta) %>% 
+  summarise(count=n()) %>% 
+  mutate(freq=100*count/sum(count))
+
+df_conta
+
+ggplot(df_conta, aes(x = factor(conta), y = freq, fill = conta)) +
+  geom_bar(stat="identity", width = 0.7) +
+  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), hjust = 1.2) +
+  labs(x = "Mode de contamination", y = "Fréquences (en %)", title="Proportion de patients", subtitle="suivant le mode de contamination") + 
+  guides(fill=FALSE) +
+  theme_tech(theme="airbnb") +
+  scale_fill_tech(theme="airbnb") + coord_flip()
 ```
 
-Plus de quatre patients sur cinq sont contaminé par voie sexuelle (48,59% hétérosexuel et 34,24% homo/bisexuel). Un peu plus de 7% par voie intraveineuse.
+Plus de quatre patients sur cinq sont contaminé par voie sexuelle ($48,59\%$ hétérosexuel et $34,24\%$ homo/bisexuel). Un peu plus de $7\%$ par voie intraveineuse.
 
 ```{r}
-typetrt = summary(base_vih$typetrt)*100/1136
-typetrt
-barplot(typetrt, ylim=c(0,40), xlab="Type de traitement reçu", ylab="Fréquence (en %)", main="Proportion de patients par type de traitement reçu")
+df_typetrt <- base_vih %>%
+  mutate(typetrt = factor(typetrt, labels = c("2IN+1IP", "2IN+INN", "autres"))) %>%
+  filter(!is.na(typetrt)) %>%
+  group_by(typetrt) %>% 
+  summarise(count=n()) %>% 
+  mutate(freq=100*count/sum(count))
+
+df_typetrt
+
+ggplot(df_typetrt, aes(x = factor(typetrt), y = freq, fill = typetrt)) +
+  geom_bar(stat="identity", width = 0.7) +
+  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25) +
+  labs(x = "Type de traitement reçu", y = "Fréquences (en %)", title="Proportion de patients", subtitle="suivant le type de traitement reçu") + 
+  guides(fill=FALSE) +
+  theme_tech(theme="airbnb") +
+  scale_fill_tech(theme="airbnb") 
 ```
 
-35% des patients ont reçu le traitement 2IN+1IP, un tier le 2IN+INN.
+$35\%$ des patients ont reçu le traitement 2IN+1IP, un tier le 2IN+INN.
 
 ```{r}
-cd4b1na = summary(base_vih$cd4b1)
-cd4b1na[4]*100/1136
+compute_prop_NaN("cd4b1")
 ```
 
-Pour 18% des patients, on n'a pas le niveau de cd4 au début du traitement.
+Pour $18\%$ des patients, on n'a pas le niveau de `cd4` au début du traitement.
 
 ```{r}
-cd4b1=cd4b1na[1:3]*100/(1136-cd4b1na[4])
-cd4b1
-barplot(cd4b1, ylim=c(0,50), xlab="Niveau de CD4 au début du traitement", ylab="Fréquence (en %)", main="Proportion de patients par niveau de CD4 au début du traitement")
+df_cd4b1 <- base_vih %>%
+  mutate(cd4b1 = factor(cd4b1, labels = c("<200", "[200;350[", ">350"))) %>%
+  filter(!is.na(cd4b1)) %>%
+  group_by(cd4b1) %>% 
+  summarise(count=n()) %>% 
+  mutate(freq=100*count/sum(count))
+
+df_cd4b1
+
+ggplot(df_cd4b1, aes(x = factor(cd4b1), y = freq, fill = cd4b1)) +
+  geom_bar(stat="identity", width = 0.7) +
+  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25) +
+  labs(x = "Niveau de CD4B1", y = "Fréquences (en %)", title="Proportion de patients", subtitle="suivant le niveau de CD4 au début du traitement") + 
+  guides(fill=FALSE) +
+  theme_tech(theme="airbnb") +
+  scale_fill_tech(theme="airbnb") 
 ```
 
 Pour les patients ayant un niveau de CD4 connu au début du traitement, deux sur cinq ont leur niveau de CD4 est inférieur à 200. Un tier a un niveau compris entre 200 et 350. Et un quart au-dessus de 350.
 
 ```{r}
-cd4b2na = summary(base_vih$cd4b2)
-cd4b2na[4]*100/1136
+compute_prop_NaN("cd4b2")
 ```
 
 Pour 10% des patients, on n'a pas le niveau de cd4 à l'arrêt du traitement ou fin du suivi.
 
 ```{r}
-cd4b2=cd4b2na[1:3]*100/(1136-cd4b2na[4])
-cd4b2
-barplot(cd4b2, ylim=c(0,60), xlab="Niveau de CD4 à l'arrêt du traitement ou fin du suivit", ylab="Fréquence (en %)", main="Proportion de patients par niveau de CD4 à l'arrêt du traitement ou fin du suivit")
+df_cd4b2 <- base_vih %>%
+  mutate(cd4b2 = factor(cd4b2, labels = c("<200", "[200;350[", ">350"))) %>%
+  filter(!is.na(cd4b2)) %>%
+  group_by(cd4b2) %>% 
+  summarise(count=n()) %>% 
+  mutate(freq=100*count/sum(count))
+
+df_cd4b2
+
+ggplot(df_cd4b2, aes(x = factor(cd4b2), y = freq, fill = cd4b2)) +
+  geom_bar(stat="identity", width = 0.7) +
+  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25) +
+  labs(x = "Niveau de CD4B2", y = "Fréquences (en %)", title="Proportion de patients", subtitle="suivant le niveau de CD4 au à l'arrêt du traitement ou fin du suivi") + 
+  guides(fill=FALSE) +
+  theme_tech(theme="airbnb") +
+  scale_fill_tech(theme="airbnb") 
 ```
 
-Quand le niveau est connu, plus d'un patient sur deux, 57.2%, à un niveau de CD4 supérieur à 350 à la fin de leur suivi. Près d'un patient sur quatre à un niveau entre 200 et 350 de CD4. Et 18% des patients ont un niveau inférieur à 200 CD4.
+Quand le niveau est connu, plus d'un patient sur deux, $57.2\%$, à un niveau de CD4 supérieur à 350 à la fin de leur suivi. Près d'un patient sur quatre à un niveau entre 200 et 350 de CD4. Et $18\%$ des patients ont un niveau inférieur à 200 CD4.
 
 ```{r}
-cvb1na=summary(base_vih$cvb1)
-cvb1na[4]*100/1136
+compute_prop_NaN("cvb1")
 ```
 
 Pour plus d'un patient sur quatre, on n'a pas de valeur de la charge virale au début du traitement.
 
 ```{r}
-cvb1=cvb1na[1:3]*100/(1136-cvb1na[4])
-cvb1
-barplot(cvb1, ylim=c(0,40), xlab="Charge virale au début du traitement", ylab="Fréquence (en %)", main="Proportion de patients en fonction de la charge viral au début du traitement")
+df_cvb1 <- base_vih %>%
+  mutate(cvb1 = factor(cvb1, labels = c("[1.5;4[", "[4;5[", ">5"))) %>%
+  filter(!is.na(cvb1)) %>%
+  group_by(cvb1) %>% 
+  summarise(count=n()) %>% 
+  mutate(freq=100*count/sum(count))
+
+df_cvb1
+
+ggplot(df_cvb1, aes(x = factor(cvb1), y = freq, fill = cvb1)) +
+  geom_bar(stat="identity", width = 0.7) +
+  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25) +
+  labs(x = "Taux de CVB1", y = "Fréquences (en %)", title="Proportion de patients", subtitle="en fonction de la charge virale au début du traitement") + 
+  guides(fill=FALSE) +
+  theme_tech(theme="airbnb") +
+  scale_fill_tech(theme="airbnb") 
 ```
 
-Lorsque le taux est connu, plus de trois patients sur quatre à une charge virale élevée, 38.8% entre 4 et 5, 38.1% au-dessus de 5. Moins d'un quart des patients a une charge inférieure à 4.
+Lorsque le taux est connu, plus de trois patients sur quatre à une charge virale élevée, $38.8\%$ entre 4 et 5, $38.1\%$ au-dessus de 5. Moins d'un quart des patients a une charge inférieure à 4.
 
 ```{r}
-cvb2na=summary(base_vih$cvb2)
-cvb2na[4]*100/1136
+compute_prop_NaN("cvb2")
 ```
 
 Pour environ 15% des patients, la charge virale à la fin du traitement ou suivi est inconnue.
 
 ```{r}
-cvb2=cvb2na[1:3]*100/(1136-cvb2na[4])
-cvb2
-barplot(cvb2, ylim=c(0,60), xlab="Charge virale à la fin du traitement", ylab="Fréquence (en %)", main="Proportion de patients en fonction de la charge viral à la fin du traitement")
+df_cvb2 <- base_vih %>%
+  mutate(cvb2 = factor(cvb2, labels = c("[1.5;4[", "[4;5[", ">5"))) %>%
+  filter(!is.na(cvb2)) %>%
+  group_by(cvb2) %>% 
+  summarise(count=n()) %>% 
+  mutate(freq=100*count/sum(count))
+
+df_cvb2
+
+ggplot(df_cvb2, aes(x = factor(cvb2), y = freq, fill = cvb2)) +
+  geom_bar(stat="identity", width = 0.7) +
+  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25) +
+  labs(x = "Taux de CVB2", y = "Fréquences (en %)", title="Proportion de patients", subtitle="en fonction de la charge virale à la fin du traitement ou fin de suivi") + 
+  guides(fill=FALSE) +
+  theme_tech(theme="airbnb") +
+  scale_fill_tech(theme="airbnb")
 ```
 
-Pour les patients dont la charge virale est connue, 57% ont une charge inférieure à 1.7, trois patients sur dix entre 1.7 et 4. Et 11% d'entre eux a une charge supérieure à 4.
+Pour les patients dont la charge virale est connue, $57\%$ ont une charge inférieure à 1.7, trois patients sur dix entre 1.7 et 4. Et $11\%$ d'entre eux a une charge supérieure à 4.
 
 
 ```{r}
-motifna=summary(base_vih$motif)
-motifna[6]*100/1136
-motifna
+compute_prop_NaN("motif")
 ```
 
-Seulement 31,69% des patients ont continué leur traitement, au moins jusqu'au 30 juin 2008.
+Seulement $31,69%$ des patients ont continué leur traitement, au moins jusqu'au 30 juin 2008.
 
 ```{r}
-motif=motifna[1:5]*100/(1136-motifna[6])
-motif
-barplot(motif, ylim=c(0,40), xlab="Motif d'arrêt du traitement", ylab="Fréquence (en %)", main="Proportion de patients en fonction de leur motif d'arrêt du traitement")
+df_motif <- base_vih %>%
+  mutate(motif = factor(motif, labels = c("Intolérance/Toxicité", "Echec thérapeutique", "Simplification traitement", "Autres", "Problèmes d'observance"))) %>%
+  filter(!is.na(motif)) %>%
+  group_by(motif) %>% 
+  summarise(count=n()) %>% 
+  mutate(freq=100*count/sum(count))
+
+df_motif
+
+ggplot(df_motif, aes(x = factor(motif), y = freq, fill = motif)) +
+  geom_bar(stat="identity", width = 0.7) +
+  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), hjust = 1.25) +
+  labs(x = "Motif d'arrêt du traitement", y = "Fréquences (en %)", title="Proportion de patients", subtitle="en fonction de du motif d'arrêt du traitement") + 
+  guides(fill=FALSE) +
+  theme_tech(theme="airbnb") +
+  scale_fill_tech(theme="airbnb") + coord_flip()
 ```
 
 La première cause d'arrêt du traitement est l'intolérance/toxicité, 34%. 17,5% des patients ont un traitement simplifié. Pour 13% des patients l'arrêt est dû à un échec thérapeutique.
 
-
-Le profil type d'un patient est une femme ayant entre 30 et 40 ans, étant contaminé par voit sexuelle (hétérosexuelle) mais n'ayant pas atteint le stade du sida. Elle a reçu le traitement 2 IN+1 IP mais ne le suit pas correctement. Son niveau de CD4 passes de moins de 200 à plus de 350 durant le traitement, sa charge virale diminue, passant de 4-5 à moins de 1,7. Elle a tendance à arrêter son traitement pour intolérance/toxicité.
-
+Le profil type d'un patient est une femme ayant entre 30 et 40 ans, étant contaminé par voie sexuelle (hétérosexuelle) mais n'ayant pas atteint le stade du sida. Elle a reçu le traitement 2 IN+1IP mais ne le suit pas correctement. Son niveau de CD4 passe de moins de 200 à plus de 350 durant le traitement, sa charge virale diminue, passant de 4-5 à moins de 1,7. Elle a tendance à arrêter son traitement pour intolérance/toxicité.
 
 ## Analyse des types d'arrêt
 
@@ -185,7 +337,23 @@ Le profil type d'un patient est une femme ayant entre 30 et 40 ans, étant conta
 tableau=addmargins(table(base_vih$typetrt,base_vih$motif), margin = 1)
 tableau
 prop.table(tableau,1)*100
-barplot(t(prop.table(tableau[1:3,],1)*100),legend.text = TRUE, beside = TRUE, xlab="type de traitement", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du traitement suivi")
+
+df_motif_trt <- base_vih %>%
+  filter(!is.na(motif)) %>%
+  mutate(typetrt = factor(typetrt, labels = c("2IN+1IP", "2IN+INN", "autres"))) %>%
+  group_by(typetrt, motif) %>%
+  summarise(count=n()) %>% 
+  mutate(freq=100*count/sum(count)) %>%
+  select(-count)
+
+library(reshape2)
+dcast(df_motif_trt, typetrt~motif)
+
+ggplot(df_motif_trt, aes(x = factor(typetrt), y = freq, fill = motif)) +
+  geom_bar(stat="identity", width = 0.7, position="dodge") +
+  labs(x = "Type de traitement", y = "Fréquences (en %)", fill = "motif", title="Fréquence du motif d'arrêt", subtitle="en fonction du type de traitement reçu") +
+  theme_tech(theme="airbnb") +
+  scale_fill_tech(theme="airbnb") 
 ```
 
 Le traitement 2IN+INN à une moins bonne tolérance contraierement aux autres traitements. Pour le traitement 2IN+INN, on retrouve peu d'échec thérapeutique mais plus souvent un simplification du traitement. Les patients prenant un autre traitement arrêtent plus souvent dû à un echec thérapeutique.
