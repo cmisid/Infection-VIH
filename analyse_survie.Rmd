@@ -35,7 +35,7 @@ Notre objectif est ici d'étudier la survenue d'évènements au cours du temps. 
 
 Afin de mettre en place une modélisation longitudinale par des méthodes d'analyse de survie, nous construisons notre jeu de données.
 
-```{r}
+```{r, include=FALSE}
 load(file = "base_vih_df_cleaned.Rdata")
 
 library(dplyr)
@@ -55,17 +55,17 @@ df <- base_vih_df %>%
 
 On charge notre jeu de données nettoyé des valeurs manquantes. Puis nous calculons le nombre de jours entre la date de point ($\Rightarrow$ date à laquelle l'étude se termine : fin du recueil des informations) et la date de début du traitement. Enfin, nous effectuons sur ce dataset un tri croissant selon le delta de jours.
 
-```{r}
+```{r, include=FALSE}
 # Load survival libraries
 library(survival)
 library(splines)
 ```
 
-## Méthode de Kaplan-Meier
+## Survie globale
 
-### Estimations
+### Estimations par la méthode de Kaplan-Meier
 
-Nous estimons la survie selon la méthode de Kaplan-Meier. 
+Nous estimons la survie selon la méthode de Kaplan-Meier. Cette méthode estime la survie à chaque survenue d'évênements et tient compte de la date exacte de l'évênement.
 
 ```{r}
 fits <- survfit(Surv(df$duree, df$arret_trt)~1)
@@ -75,8 +75,6 @@ fits
 **Joseph**: commentaires généraux 
 
 ```{r}
-summary(fits)
-
 format_survival_table <- function(fits) {
   steps <- rev(seq(0, 1, by=0.05))
   indexes <- c()
@@ -106,7 +104,7 @@ summary_fits
 **Joseph**: commentaires sur le tableau :
 - ne pas oublier de dire que l'écart-type augmente avec le temps donc les IC sont de plus en plus larges
 
-### Représentation de la courbe de survie Kaplan-Meier
+### Représentation de la courbe de survie
 
 ```{r}
 library(survminer)
@@ -119,7 +117,13 @@ ggsurvplot(fits,
 
 **Joseph**: commentaires sur la courbe
 
-## Représentation par type de traitement
+
+
+## Estimation de la survie suivant le type de traitement
+
+### Estimation de la survie par la méthode de Kaplan-Meier
+
+Notre but est ici de comparer les 3 types de traitement.
 
 ```{r}
 fits_trt <- survfit(Surv(df$duree, df$arret_trt)~df$typetrt)
@@ -130,6 +134,10 @@ fits_trt
 summary(fits_trt)
 ```
 
+### Représentation graphique
+
+La fonction de survie représente la probabilité pour qu'un patient n'est pas arrêté son traitement après un délai $t$ à compter d'un instant de référence, ou encore la proportion de personne poursuivant leur traitement après un délai $t$. Ici, le délai $t$, correspond à la date de début de traitement pour chaque patient.
+
 ```{r}
 ggsurvplot(fits_trt, 
            risk.table = TRUE, 
@@ -137,3 +145,59 @@ ggsurvplot(fits_trt,
            break.time.by = 360)
 ```
 
+On représente la survie de Kaplan-Meier avec en abscisse la durée de suivi et en ordonnée l'estimation de la fonction de survie. On note que le taux d'arrêt de traitement est identique pour les 3 traitements mais sur les 3 premières années l'arrêt est plus tardif pour le traitement 1.
+
+### Test du Log-Rank
+
+Pour montrer que le type de traitement a un lien avec la survie, nous mettons en oeuvre le test du *Log-Rank*. C'est un test de comparaison entre courbes de survie. Si 2 courbes de survie sont égales, le nombre d'arrêts de traitement devrait survenir au même rythme dans les 3 groupes.
+L'idée de base du test du Log-Rank est de comparer le nombre d'évènements observés et le nombre d'évènements attendus sous l'hypothèse nulle d'égalité de la survie dans les 3 groupes.
+
+L'hyptohèse nulle est l'égalité des probabilités de survie dans les 3 groupes : 
+
+\[ H_0 : S_{trt\_0}(t) = S_{trt\_1}(t) = S_{trt\_2}(t) \]
+
+On cherche si la différence observée entre les courbes de survie dans les groupes `trt_0`, `trt_1` et `trt_2` permet de rejeter l'hypothèse nulle.
+
+```{r}
+survdiff(Surv(df$duree, df$arret_trt)~df$typetrt)
+```
+Ici on rejette $H_0$ l'hypothèse d'égalité des courbes de survie et on conclut à une différence significative des délais de survenue de l'évènement dans les 3 groupes. On note que la plus grosse contribution vient du traitement 1 suivi du traitement 2. Cela signifie qu'il y a de gros écarts entre les effectifs observés et les effectifs attendus (théoriques). On conclut que la survenue d'un arrêt de traitement est plus tardive lorsque les patients prennent le traitement 1.
+
+### Modèle de Cox
+
+Le modèle de Cox permet d'exprimer le risque instantané de survenue de l'évènement en fonction de l'instant $t$ et des variables explicatives $X^j$. Il permet donc d'étudier l'effet éventuel de plusieurs covariables sur la survie.
+
+```{r}
+options(contrasts=c("contr.SAS","contr.SAS"))
+cox_trt <- coxph(Surv(df$duree, df$arret_trt)~df$typetrt)
+cox_trt
+```
+
+```{r}
+anova(cox_trt)
+```
+
+L'effet du type traitement est significatif sur le risque instantané d'arrêt de traitement.
+
+```{r}
+summary(cox_trt)
+```
+Ici on note que $e^{\beta_{\_trt\_0}}$ est inférieur à 1, ceci indique que des valeurs élevées de la caractéristique traitement 0 sont associées à un risque instantané d'arrêt de traitement plus faible. Ainsi, la survenue d'arrêt est environ 30% plus faible pour les patients ayant pris le traitement 1 plutôt que le traitement 2. Le risque instantané d'arrêt est multiplié par 0.87 lorsque que l'on compare le traitement 0 et le traitement 2. On constate donc que le traitement 2 augmente le risque instantané d'arrêt de traitement comparé aux 2 autres traitements.
+Notons également que pour la *p-value* du traitement 1 liée à la statistique $Z$ est inférieure à $5\%$ donc l'hypothèse que $\beta_{trt_1}=0$ est rejetée. Pour le traitement 0 on ne peut pas rejeter $H_0$ au seuil $\alpha=5\%$. 
+
+Nous cherchons à voir si l'hypothèse des risques proportionnels est raisonnable ou non. Nous avons mis en évidence un effet: cet effet est il constant au cours du temps ?
+
+`cox.zph` nous permet de tester le modèle des risques proportionnels de Cox.
+```{r}
+diag_trt <- cox.zph(cox_trt)
+diag_trt
+```
+
+Cette matrice contient une ligne pour chaque variable et une ligne pour le test global. La matrice contient le coefficient de corrélation entre la durée de survie transformée et les résidus de Schoenfeld, un $\mathcal{X}^2$, et une p-value. Pour le test global il n'y a pas de corrélation appropriée, c'est pourquoi nous avons un "NA". 
+
+```{r}
+par(mfrow=c(2,1))
+plot(diag_trt)
+```
+
+En abscisse nous avons la durée de suivi et en ordonnée nous avons les valeurs des résidus de Schoenfeld.
