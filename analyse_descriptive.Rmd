@@ -2,7 +2,10 @@
 title: "analysedescript"
 author: "JM"
 date: "30/01/2017"
-output: html_document
+output: 
+  pdf_document: 
+    highlight: pygments
+    keep_tex: yes
 ---
 
 # Importation des données
@@ -77,7 +80,7 @@ ggplot(df_age, aes(x = factor(age), y = freq, fill = age)) +
 df_age
 ```
 
-L'âge des patients varie de 18 à 60 ans. La catégorie 4 [60;+] est vide. La tranche d'âge modale est [30;40], elle représente près de 2 patients sur 5 (39% des patients).
+L'âge des patients varie de 18 à 60 ans. La catégorie 4 $[60;+]$ est vide. La tranche d'âge modale est $[30;40]$, elle représente près de 2 patients sur 5 ($39\%$ des patients).
 
 ```{r}
 df_sexe <- base_vih %>%
@@ -116,7 +119,7 @@ ggplot(df_observ, aes(x = factor(observ), y = freq, fill = observ)) +
   scale_fill_tech(theme="airbnb") 
 ```
 
-Environ 4 patients sur 5, 79.4%, ne suit pas leur traitement correctement.
+Environ 4 patients sur 5, $79.4\%$, ne suit pas leur traitement correctement.
 
 ```{r}
 compute_prop_NaN <- function(var) {
@@ -127,7 +130,7 @@ compute_prop_NaN <- function(var) {
 compute_prop_NaN("sida")
 ```
 
-Pour près de 4% des patients on ne connaît pas leur stade d'avancement.
+Pour près de $4\%$ des patients on ne connaît pas leur stade d'avancement.
 
 ```{r}
 df_sida <- base_vih %>%
@@ -147,7 +150,7 @@ ggplot(df_sida, aes(x = factor(sida), y = freq, fill = sida)) +
   scale_fill_tech(theme="airbnb") 
 ```
 
-13,82% des patients atteints par le VIH ont atteint le stade du SIDA.
+$13,82\%$ des patients atteints par le VIH ont atteint le stade du SIDA.
 
 ```{r}
 df_conta <- base_vih %>%
@@ -195,7 +198,7 @@ $35\%$ des patients ont reçu le traitement 2IN+1IP, un tier le 2IN+INN.
 compute_prop_NaN("cd4b1")
 ```
 
-Pour $18\%$ des patients, on n'a pas le niveau de `cd4` au début du traitement.
+Pour $18\%$ des patients, on n'a pas le niveau de $`cd4`$ au début du traitement.
 
 ```{r}
 df_cd4b1 <- base_vih %>%
@@ -222,7 +225,7 @@ Pour les patients ayant un niveau de CD4 connu au début du traitement, deux sur
 compute_prop_NaN("cd4b2")
 ```
 
-Pour 10% des patients, on n'a pas le niveau de cd4 à l'arrêt du traitement ou fin du suivi.
+Pour $10\%$ des patients, on n'a pas le niveau de cd4 à l'arrêt du traitement ou fin du suivi.
 
 ```{r}
 df_cd4b2 <- base_vih %>%
@@ -276,7 +279,7 @@ Lorsque le taux est connu, plus de trois patients sur quatre à une charge viral
 compute_prop_NaN("cvb2")
 ```
 
-Pour environ 15% des patients, la charge virale à la fin du traitement ou suivi est inconnue.
+Pour environ $15\%$ des patients, la charge virale à la fin du traitement ou suivi est inconnue.
 
 ```{r}
 df_cvb2 <- base_vih %>%
@@ -325,7 +328,7 @@ ggplot(df_motif, aes(x = factor(motif), y = freq, fill = motif)) +
   scale_fill_tech(theme="airbnb") + coord_flip()
 ```
 
-La première cause d'arrêt du traitement est l'intolérance/toxicité, 34%. 17,5% des patients ont un traitement simplifié. Pour 13% des patients l'arrêt est dû à un échec thérapeutique.
+La première cause d'arrêt du traitement est l'intolérance/toxicité, $34\%$. $17,5\%$ des patients ont un traitement simplifié. Pour $13\%$ des patients l'arrêt est dû à un échec thérapeutique.
 
 Le profil type d'un patient est une femme ayant entre 30 et 40 ans, étant contaminé par voie sexuelle (hétérosexuelle) mais n'ayant pas atteint le stade du sida. Elle a reçu le traitement 2 IN+1IP mais ne le suit pas correctement. Son niveau de CD4 passe de moins de 200 à plus de 350 durant le traitement, sa charge virale diminue, passant de 4-5 à moins de 1,7. Elle a tendance à arrêter son traitement pour intolérance/toxicité.
 
@@ -385,7 +388,7 @@ ggplot(df_motif_sexe, aes(x = factor(sexe), y = freq, fill = motif)) +
   scale_fill_tech(theme="airbnb") 
 ```
 
-Les hommes arrêtent leur traitement plus souvent pour d'autres raison que les femmes, 34% contre 25%. Sinon que le patients soit une femme ou un homme les proportions d'arrêts sont presque identique quelque soit le motif. 
+Les hommes arrêtent leur traitement plus souvent pour d'autres raison que les femmes, $34\%$ contre $25\%$. Sinon que le patients soit une femme ou un homme les proportions d'arrêts sont presque identique quelque soit le motif. 
 
 Test de la liaison entre le motif d'arrêt et le sexe du patient.
 
@@ -417,7 +420,7 @@ ggplot(df_motif_age, aes(x = factor(age), y = freq, fill = motif)) +
   scale_fill_tech(theme="airbnb") 
 ```
 
-Les patients jeunes, 18-30 ans, arrêtent bien moins souvent pour une intolérance au traitement contrairement aux plus âgés, 50-60 ans (25% des jeunes contre 49% des patients âgés). Par contre on peut remarquer 12% des jeunes arrêtent le traitement car ils ne le suivent pas correctement contre moins de 2% des 50-60 ans. Un patient sur cinq de plus de 40 ans arrêtent le suivi par une simplification du traitement, chez les moins de 30 ans moins de 10% des arrêts sont dû à une simplification. Les 30-40 qui arrêtent le font plus souvent pour une échec thérapeutique que la moyenne contrairement aux jeunes. Les deux jeunes sur cinq ne font plus le suivi pour d'autres raison, moins de 15% du temps chez les 50-60 ans, contre un patient sur quatre en moyenne.
+Les patients jeunes, 18-30 ans, arrêtent bien moins souvent pour une intolérance au traitement contrairement aux plus âgés, 50-60 ans ($25\%$ des jeunes contre $49\%$ des patients âgés). Par contre on peut remarquer $12\%$ des jeunes arrêtent le traitement car ils ne le suivent pas correctement contre moins de $2\%$ des 50-60 ans. Un patient sur cinq de plus de 40 ans arrêtent le suivi par une simplification du traitement, chez les moins de 30 ans moins de $10\%$ des arrêts sont dû à une simplification. Les 30-40 qui arrêtent le font plus souvent pour une échec thérapeutique que la moyenne contrairement aux jeunes. Les deux jeunes sur cinq ne font plus le suivi pour d'autres raison, moins de $15\%$ du temps chez les 50-60 ans, contre un patient sur quatre en moyenne.
 
 Test du lien entre le motif d'arrêt et le classe d'âge. On regroupe les problèmes d'observence avec les autres car nous manquons d'individu.
 
@@ -481,7 +484,7 @@ ggplot(df_motif_sida, aes(x = factor(sida), y = freq, fill = motif)) +
   scale_fill_tech(theme="airbnb") 
 ```
 
-Les patients ayant atteint le stade du sida ont arrêtaient plus souvent dû a une intolérence ou un échec thérapeutique, respectivement 4.3 et2.3 point au dessus de la moyenne.
+Les patients ayant atteint le stade du sida ont arrêtaient plus souvent dû a une intolérence ou un échec thérapeutique, respectivement 4.3 et 2.3 point au dessus de la moyenne.
 
 On test le lien entre le motif d'arrêt et le stade de la maladie du patient.
 
@@ -500,7 +503,7 @@ tableau6
 barplot(t(prop.table(tableau6[1:4,],1)*100),legend.text = TRUE, beside = TRUE, xlab="type de contamination", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du type de contamination de la maladie du patient", ylim = c(0,50))
 ```
 
-Les patients contaminés par toxico voie intraveineuse arrêtent plus souvent par un échec thérapeutique ou un problème d'observance (5.7 et 4 point au dessus de la moyenne) mais deux fois moins souvent que l'ensemble par simplification du traitement, 9% des cas contre 17.5%. Les patients contaminés par d'autre voie sont arrêtent plus souvent dû a une intolérance, 49% des cas contre 34% en moyenne. En revanche ils stop leur traitement, plus rarement a cause d'un échec thérapeutique ou une simplification de ce traitement.
+Les patients contaminés par toxico voie intraveineuse arrêtent plus souvent par un échec thérapeutique ou un problème d'observance (5.7 et 4 point au dessus de la moyenne) mais deux fois moins souvent que l'ensemble par simplification du traitement, $9\%$ des cas contre $17.5\%$. Les patients contaminés par d'autre voie sont arrêtent plus souvent dû a une intolérance, $49\%$ des cas contre $34\%$ en moyenne. En revanche ils stop leur traitement, plus rarement a cause d'un échec thérapeutique ou une simplification de ce traitement.
 
 On test l'indépendance entre le type de contamination et le motif d'arrêt.
 
@@ -538,7 +541,7 @@ tableau8
 barplot(t(prop.table(tableau8[1:3,],1)*100),legend.text = TRUE, beside = TRUE, xlab="niveau de CD4", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du niveau de CD4, à la fin, du patient", ylim = c(0,40))
 ```
 
-Les patients ayant un niveau de CD4 inférieur à 200 ont eu plus souvent un échec thérapeutique, +6%, ou un problème d'observance, +4%, par contre ils ont deux fois moins souvent une simplification du traitement. A l'inverse des patients ayant eu leur niveau de CD4 qui est passé au-dessus de 350.
+Les patients ayant un niveau de CD4 inférieur à 200 ont eu plus souvent un échec thérapeutique, $+6\%$, ou un problème d'observance, $+4\%$, par contre ils ont deux fois moins souvent une simplification du traitement. A l'inverse des patients ayant eu leur niveau de CD4 qui est passé au-dessus de 350.
 
 On test le lien entre CD4B2 et le motif
 
@@ -559,7 +562,7 @@ tableau9
 barplot(t(prop.table(tableau9[1:3,],1)*100),legend.text = TRUE, beside = TRUE, xlab="charge de CV", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction de la charge virale, au début, du patient", ylim = c(0,40))
 ```
 
-Les patients ayant eux une charge virale "faible" au début du traitement ont été plus tolérent au traitement et ont eux leur traitement simplifier moins souvent que la moyenne, respectivement -11% et -5%. Par contre il y a eu plus d'échec thérapeutique, +4%. Les patientsavec une charge virale très élevés ont eux plus souvent une simplification de leur traitement, +7 points, et moins d'échec thérapeutique, -4 points.
+Les patients ayant eux une charge virale "faible" au début du traitement ont été plus tolérent au traitement et ont eux leur traitement simplifier moins souvent que la moyenne, respectivement $-11\%$ et $-5\%$. Par contre il y a eu plus d'échec thérapeutique, $+4\%$. Les patientsavec une charge virale très élevés ont eux plus souvent une simplification de leur traitement, +7 points, et moins d'échec thérapeutique, -4 points.
 
 Test du lien entre la charge virale au début du traitement et le motif d'arrêt.
 

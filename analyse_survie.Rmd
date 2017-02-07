@@ -49,7 +49,7 @@ df <- base_vih_df %>%
       as.numeric(d_point-d_debtrt))
     ) %>%
   mutate(arret_trt=as.numeric(arret_trt)) %>%
-  select(duree, arret_trt, typetrt) %>%
+  select(duree, arret_trt, typetrt, sexe) %>%
   arrange(duree)
 ```
 
