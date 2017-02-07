@@ -72,9 +72,39 @@ fits <- survfit(Surv(df$duree, df$arret_trt)~1)
 fits
 ```
 
+**Joseph**: commentaires généraux 
+
 ```{r}
 summary(fits)
+
+format_survival_table <- function(fits) {
+  steps <- rev(seq(0, 1, by=0.05))
+  indexes <- c()
+  for (step in steps) {
+    indexes <- c(indexes, which.min(abs(fits$surv - step)))
+  }
+  
+  summary_fits <- data.frame(
+    data = cbind(
+      fits$time[indexes],
+      fits$n.risk[indexes],
+      fits$n.event[indexes],
+      fits$surv[indexes],
+      fits$std.err[indexes],
+      fits$lower[indexes],
+      fits$upper[indexes])
+  )
+  colnames(summary_fits) <- c("time", "n.risk", "n.event", "survival", "std.err", "lower 95% CI", "upper 95% CI")
+  summary_fits <- summary_fits[!duplicated(summary_fits),]
+  return(summary_fits)
+}
+
+summary_fits <- format_survival_table(fits)
+summary_fits
 ```
+
+**Joseph**: commentaires sur le tableau :
+- ne pas oublier de dire que l'écart-type augmente avec le temps donc les IC sont de plus en plus larges
 
 ### Représentation de la courbe de survie Kaplan-Meier
 
@@ -87,7 +117,9 @@ ggsurvplot(fits,
            break.time.by = 360)
 ```
 
-### Représentation par type de traitement
+**Joseph**: commentaires sur la courbe
+
+## Représentation par type de traitement
 
 ```{r}
 fits_trt <- survfit(Surv(df$duree, df$arret_trt)~df$typetrt)
