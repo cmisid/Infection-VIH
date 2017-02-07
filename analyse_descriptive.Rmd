@@ -67,7 +67,7 @@ library(ggtech)
 library(ggplot2)
 ggplot(df_age, aes(x = factor(age), y = freq, fill = age)) +
   geom_bar(stat="identity", width = 0.7) +
-  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25) +
+  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25, family = "Circular Air Medium") +
   labs(x = "Tranches d'âge des patients", y = "Fréquences (en %)", fill = "age", title="Proportion de patients", subtitle="par tranche d'âge") + 
   guides(fill=FALSE) + 
   theme_tech(theme="airbnb") +
@@ -90,7 +90,7 @@ df_sexe
 
 ggplot(df_sexe, aes(x = factor(sexe), y = freq, fill = sexe)) +
   geom_bar(stat="identity", width = 0.7) +
-  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25) +
+  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25, family = "Circular Air Medium") +
   labs(x = "Genre des patients", y = "Fréquences (en %)", fill = "sexe", title="Proportion de patients", subtitle="par genre") + 
   guides(fill=FALSE) +
   theme_tech(theme="airbnb") +
@@ -109,7 +109,7 @@ df_observ <- base_vih %>%
 
 ggplot(df_observ, aes(x = factor(observ), y = freq, fill = observ)) +
   geom_bar(stat="identity", width = 0.7) +
-  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25) +
+  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25, family = "Circular Air Medium") +
   labs(x = "Observance", y = "Fréquences (en %)", title="Proportion de patients", subtitle="en fonction de la consultation d'observance") + 
   guides(fill=FALSE) +
   theme_tech(theme="airbnb") +
@@ -140,7 +140,7 @@ df_sida <- base_vih %>%
 
 ggplot(df_sida, aes(x = factor(sida), y = freq, fill = sida)) +
   geom_bar(stat="identity", width = 0.7) +
-  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25) +
+  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25, family = "Circular Air Medium") +
   labs(x = "Patient atteint du sida", y = "Fréquences (en %)", title="Proportion de patients", subtitle="ayant atteint le stade du sida") + 
   guides(fill=FALSE) +
   theme_tech(theme="airbnb") +
@@ -161,7 +161,7 @@ df_conta
 
 ggplot(df_conta, aes(x = factor(conta), y = freq, fill = conta)) +
   geom_bar(stat="identity", width = 0.7) +
-  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), hjust = 1.2) +
+  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), hjust = 1.2, family = "Circular Air Medium") +
   labs(x = "Mode de contamination", y = "Fréquences (en %)", title="Proportion de patients", subtitle="suivant le mode de contamination") + 
   guides(fill=FALSE) +
   theme_tech(theme="airbnb") +
@@ -182,7 +182,7 @@ df_typetrt
 
 ggplot(df_typetrt, aes(x = factor(typetrt), y = freq, fill = typetrt)) +
   geom_bar(stat="identity", width = 0.7) +
-  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25) +
+  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25, family = "Circular Air Medium") +
   labs(x = "Type de traitement reçu", y = "Fréquences (en %)", title="Proportion de patients", subtitle="suivant le type de traitement reçu") + 
   guides(fill=FALSE) +
   theme_tech(theme="airbnb") +
@@ -209,7 +209,7 @@ df_cd4b1
 
 ggplot(df_cd4b1, aes(x = factor(cd4b1), y = freq, fill = cd4b1)) +
   geom_bar(stat="identity", width = 0.7) +
-  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25) +
+  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25, family = "Circular Air Medium") +
   labs(x = "Niveau de CD4B1", y = "Fréquences (en %)", title="Proportion de patients", subtitle="suivant le niveau de CD4 au début du traitement") + 
   guides(fill=FALSE) +
   theme_tech(theme="airbnb") +
@@ -236,7 +236,7 @@ df_cd4b2
 
 ggplot(df_cd4b2, aes(x = factor(cd4b2), y = freq, fill = cd4b2)) +
   geom_bar(stat="identity", width = 0.7) +
-  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25) +
+  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25, family = "Circular Air Medium") +
   labs(x = "Niveau de CD4B2", y = "Fréquences (en %)", title="Proportion de patients", subtitle="suivant le niveau de CD4 au à l'arrêt du traitement ou fin du suivi") + 
   guides(fill=FALSE) +
   theme_tech(theme="airbnb") +
@@ -263,7 +263,7 @@ df_cvb1
 
 ggplot(df_cvb1, aes(x = factor(cvb1), y = freq, fill = cvb1)) +
   geom_bar(stat="identity", width = 0.7) +
-  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25) +
+  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25, family = "Circular Air Medium") +
   labs(x = "Taux de CVB1", y = "Fréquences (en %)", title="Proportion de patients", subtitle="en fonction de la charge virale au début du traitement") + 
   guides(fill=FALSE) +
   theme_tech(theme="airbnb") +
@@ -290,7 +290,7 @@ df_cvb2
 
 ggplot(df_cvb2, aes(x = factor(cvb2), y = freq, fill = cvb2)) +
   geom_bar(stat="identity", width = 0.7) +
-  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25) +
+  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), vjust = -0.25, family = "Circular Air Medium") +
   labs(x = "Taux de CVB2", y = "Fréquences (en %)", title="Proportion de patients", subtitle="en fonction de la charge virale à la fin du traitement ou fin de suivi") + 
   guides(fill=FALSE) +
   theme_tech(theme="airbnb") +
@@ -318,7 +318,7 @@ df_motif
 
 ggplot(df_motif, aes(x = factor(motif), y = freq, fill = motif)) +
   geom_bar(stat="identity", width = 0.7) +
-  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), hjust = 1.25) +
+  geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), hjust = 1.25, family = "Circular Air Medium") +
   labs(x = "Motif d'arrêt du traitement", y = "Fréquences (en %)", title="Proportion de patients", subtitle="en fonction de du motif d'arrêt du traitement") + 
   guides(fill=FALSE) +
   theme_tech(theme="airbnb") +
@@ -334,9 +334,9 @@ Le profil type d'un patient est une femme ayant entre 30 et 40 ans, étant conta
 ### Type de motif d'arrêt en fonction du traitement
 
 ```{r}
-tableau=addmargins(table(base_vih$typetrt,base_vih$motif), margin = 1)
-tableau
-prop.table(tableau,1)*100
+tablefreq_motif_trt <- addmargins(table(base_vih$typetrt, base_vih$motif), margin = 1)
+tablefreq_motif_trt
+prop.table(tablefreq_motif_trt, 1)*100
 
 df_motif_trt <- base_vih %>%
   filter(!is.na(motif)) %>%
@@ -345,9 +345,6 @@ df_motif_trt <- base_vih %>%
   summarise(count=n()) %>% 
   mutate(freq=100*count/sum(count)) %>%
   select(-count)
-
-library(reshape2)
-dcast(df_motif_trt, typetrt~motif)
 
 ggplot(df_motif_trt, aes(x = factor(typetrt), y = freq, fill = motif)) +
   geom_bar(stat="identity", width = 0.7, position="dodge") +
@@ -361,7 +358,7 @@ Le traitement 2IN+INN à une moins bonne tolérance contraierement aux autres tr
 On va test le lien entre le motif d'arrêt et le type de traitement pris.
 
 ```{r}
-chisq.test(tableau)
+chisq.test(tablefreq_motif_trt)
 ```
 
 On retrouve un lien significatif entre le motif d'arrêt et le type de traitement pris.
@@ -369,10 +366,23 @@ On retrouve un lien significatif entre le motif d'arrêt et le type de traitemen
 ### Motif d'arrêt en fonction du sexe du patient
 
 ```{r}
-tableau2=addmargins(table(base_vih$sexe,base_vih$motif), margin = 1)
-tableau2
-prop.table(tableau2,1)*100
-barplot(t(prop.table(tableau2[1:2,],1)*100),legend.text = TRUE, beside = TRUE, xlab="type de traitement", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du sexe du patient", ylim = c(0,40))
+tablefreq_motif_sexe <- addmargins(table(base_vih$sexe, base_vih$motif), margin = 1)
+tablefreq_motif_sexe
+prop.table(tablefreq_motif_sexe, 1) * 100
+
+df_motif_sexe <- base_vih %>%
+  filter(!is.na(motif)) %>%
+  mutate(sexe = factor(sexe, labels = c("homme", "femme"))) %>%
+  group_by(sexe, motif) %>%
+  summarise(count=n()) %>% 
+  mutate(freq=100*count/sum(count)) %>%
+  select(-count)
+
+ggplot(df_motif_sexe, aes(x = factor(sexe), y = freq, fill = motif)) +
+  geom_bar(stat="identity", width = 0.7, position="dodge") +
+  labs(x = "Genre", y = "Fréquences (en %)", fill = "motif", title="Fréquence du motif d'arrêt", subtitle="en fonction du sexe du patient") +
+  theme_tech(theme="airbnb") +
+  scale_fill_tech(theme="airbnb") 
 ```
 
 Les hommes arrêtent leur traitement plus souvent pour d'autres raison que les femmes, 34% contre 25%. Sinon que le patients soit une femme ou un homme les proportions d'arrêts sont presque identique quelque soit le motif. 
@@ -380,7 +390,7 @@ Les hommes arrêtent leur traitement plus souvent pour d'autres raison que les f
 Test de la liaison entre le motif d'arrêt et le sexe du patient.
 
 ```{r}
-chisq.test(tableau2)
+chisq.test(tablefreq_motif_sexe)
 ```
 
 Le sexe du patient n'a pas de lien significatif avec le motif d'arrêt
@@ -388,53 +398,87 @@ Le sexe du patient n'a pas de lien significatif avec le motif d'arrêt
 ### Motif d'arrêt en fonction de la classe d'âge
 
 ```{r}
-tableau3=addmargins(table(base_vih$age,base_vih$motif), margin=1)
-tableau3
-prop.table(tableau3,1)*100
-barplot(t(prop.table(tableau3[1:4,],1)*100),legend.text = TRUE, beside = TRUE, xlab="classe d'âge", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction de l'âge du patient", ylim = c(0,50))
+tablefreq_motif_age <- addmargins(table(base_vih$age, base_vih$motif), margin=1)
+tablefreq_motif_age
+prop.table(tablefreq_motif_age, 1) * 100
+
+df_motif_age <- base_vih %>%
+  filter(!is.na(motif)) %>%
+  mutate(age = factor(age, labels = c("[18;30[", "[30;40[", "[40;50[", "[50;60["))) %>%
+  group_by(age, motif) %>%
+  summarise(count=n()) %>% 
+  mutate(freq=100*count/sum(count)) %>%
+  select(-count)
+
+ggplot(df_motif_age, aes(x = factor(age), y = freq, fill = motif)) +
+  geom_bar(stat="identity", width = 0.7, position="dodge") +
+  labs(x = "Genre", y = "Fréquences (en %)", fill = "motif", title="Fréquence du motif d'arrêt", subtitle="en fonction de la classe d'âge du patient") +
+  theme_tech(theme="airbnb") +
+  scale_fill_tech(theme="airbnb") 
 ```
 
 Les patients jeunes, 18-30 ans, arrêtent bien moins souvent pour une intolérance au traitement contrairement aux plus âgés, 50-60 ans (25% des jeunes contre 49% des patients âgés). Par contre on peut remarquer 12% des jeunes arrêtent le traitement car ils ne le suivent pas correctement contre moins de 2% des 50-60 ans. Un patient sur cinq de plus de 40 ans arrêtent le suivi par une simplification du traitement, chez les moins de 30 ans moins de 10% des arrêts sont dû à une simplification. Les 30-40 qui arrêtent le font plus souvent pour une échec thérapeutique que la moyenne contrairement aux jeunes. Les deux jeunes sur cinq ne font plus le suivi pour d'autres raison, moins de 15% du temps chez les 50-60 ans, contre un patient sur quatre en moyenne.
 
-Test du lien entre le motif d'arrêt et le classe d'âge. On regroupe les pb d'observence avec les autres car nous manquons d'individu.
+Test du lien entre le motif d'arrêt et le classe d'âge. On regroupe les problèmes d'observence avec les autres car nous manquons d'individu.
 
 ```{r}
-tableau3c=tableau3[,1:4]
-tableau3c[1,4] = tableau3c[1,4] + tableau3[1,5]
-tableau3c[2,4] = tableau3c[2,4] + tableau3[2,5]
-tableau3c[3,4] = tableau3c[3,4] + tableau3[3,5]
-tableau3c[4,4] = tableau3c[4,4] + tableau3[4,5]
-tableau3c[5,4] = tableau3c[5,4] + tableau3[5,5]
-tableau3c
-chisq.test(tableau3c)
+tablefreq_motif_age[,4] = tablefreq_motif_age[,4] + tablefreq_motif_age[,5]
+chisq.test(tablefreq_motif_age[,1:4])
 ```
 
-La classe d'âge est lié significativement avec le motif d'arrêt.
+La classe d'âge est liée significativement avec le motif d'arrêt.
 
 ### Motif d'arrêt en fonction de l'observance du patient
 
 ```{r}
-tableau4=addmargins(table(base_vih$observ,base_vih$motif), margin = 1)
-tableau4
-prop.table(tableau4,1)*100
-barplot(t(prop.table(tableau4[1:2,],1)*100),legend.text = TRUE, beside = TRUE, xlab="Observance du patient", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction de l'âge l'observance du patient", ylim = c(0,50))
+tablefreq_motif_observ <- addmargins(table(base_vih$observ, base_vih$motif), margin=1)
+tablefreq_motif_observ
+prop.table(tablefreq_motif_observ, 1) * 100
+
+df_motif_observ <- base_vih %>%
+  filter(!is.na(motif)) %>%
+  mutate(observ = factor(observ, labels = c("non", "oui"))) %>%
+  group_by(observ, motif) %>%
+  summarise(count=n()) %>% 
+  mutate(freq=100*count/sum(count)) %>%
+  select(-count)
+
+ggplot(df_motif_observ, aes(x = factor(observ), y = freq, fill = motif)) +
+  geom_bar(stat="identity", width = 0.7, position="dodge") +
+  labs(x = "Observance du patient", y = "Fréquences (en %)", fill = "motif", title="Fréquence du motif d'arrêt", subtitle="en fonction de l'observance du patient") +
+  theme_tech(theme="airbnb") +
+  scale_fill_tech(theme="airbnb") 
 ```
 
 Les patients qui suivent leur traitements correctement arrêtent plus souvent le suivi dû à une intolérance ou simplification du traitement mais moins souvent suite à un échec thérapeutique.
 
 ```{r}
-chisq.test(tableau4)
+chisq.test(tablefreq_motif_observ)
 ```
 
-Le motif d'arrêt et l'observance du patient sont significativement lié.
+Le motif d'arrêt et l'observance du patient sont significativement liés.
 
 ### Motif d'arrêt en fonction du stade de la maladie
 
-
 ```{r}
-tableau5=addmargins(table(base_vih$sida,base_vih$motif),  margin = 1)
-prop.table(tableau5,1)*100
-barplot(t(prop.table(tableau5[1:2,],1)*100),legend.text = TRUE, beside = TRUE, xlab="stade du patient", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du stade de la maladie du patient", ylim = c(0,40))
+tablefreq_motif_sida <- addmargins(table(base_vih$sida, base_vih$motif), margin=1)
+tablefreq_motif_sida
+prop.table(tablefreq_motif_sida, 1) * 100
+
+df_motif_sida <- base_vih %>%
+  filter(!is.na(motif)) %>%
+  filter(!is.na(sida)) %>%
+  mutate(sida = factor(sida, labels = c("non", "oui"))) %>%
+  group_by(sida, motif) %>%
+  summarise(count=n()) %>% 
+  mutate(freq=100*count/sum(count)) %>%
+  select(-count)
+
+ggplot(df_motif_sida, aes(x = factor(sida), y = freq, fill = motif)) +
+  geom_bar(stat="identity", width = 0.7, position="dodge") +
+  labs(x = "Stade du patient", y = "Fréquences (en %)", fill = "motif", title="Fréquence du motif d'arrêt", subtitle="en fonction du stade de la maladie du patient") +
+  theme_tech(theme="airbnb") +
+  scale_fill_tech(theme="airbnb") 
 ```
 
 Les patients ayant atteint le stade du sida ont arrêtaient plus souvent dû a une intolérence ou un échec thérapeutique, respectivement 4.3 et2.3 point au dessus de la moyenne.
@@ -442,7 +486,7 @@ Les patients ayant atteint le stade du sida ont arrêtaient plus souvent dû a u
 On test le lien entre le motif d'arrêt et le stade de la maladie du patient.
 
 ```{r}
-chisq.test(tableau5)
+chisq.test(tablefreq_motif_sida)
 ```
 
 Il n'y a pas de liaison significative entre le motif d'arrêt et le stade de la maladie du patient.
