@@ -347,7 +347,7 @@ tableau9
 barplot(t(prop.table(tableau9[1:3,],1)*100),legend.text = TRUE, beside = TRUE, xlab="charge de CV", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction de la charge virale, au début, du patient", ylim = c(0,40))
 ```
 
-Les patients ayant eux une charge virale "faible" au début du traitement ont été plus tolérent au traitement et ont eux leur traitement simplifier moins souvent que la moyenne, respectivement -11% et -5%. Par contre il y a eu plus d'échec thérapeutique, +4%. Les patientsavec une charge virale très élevés ont eux plus souvent une simplification de leur traitement, +7%.
+Les patients ayant eux une charge virale "faible" au début du traitement ont été plus tolérent au traitement et ont eux leur traitement simplifier moins souvent que la moyenne, respectivement -11% et -5%. Par contre il y a eu plus d'échec thérapeutique, +4%. Les patientsavec une charge virale très élevés ont eux plus souvent une simplification de leur traitement, +7 points, et moins d'échec thérapeutique, -4 points.
 
 Test du lien entre la charge virale au début du traitement et le motif d'arrêt.
 
@@ -366,7 +366,7 @@ tableau10
 barplot(t(prop.table(tableau10[1:3,],1)*100),legend.text = TRUE, beside = TRUE, xlab="type de contamination", ylab = "Fréquence (en %)", main = "Fréquence du type d'arrêt en fonction du type de contamination de la maladie du patient", ylim = c(0,50))
 ```
 
-
+Les patients qui ont une charge virale inférieur à 1,7 ont arrêté plus souvent que la moyenne dû à une simplification du traitement, 15 points de plus que la moyenne. A l'inverse, ils ont rarement arrêté à cause d'un échec thérapeutique et pour un problème d'observance,  10 et 4 points demoins que la moyenne. On retrouve le cas inverse pour les patients ayant une charge virale supérieur à 4. Ils ont un grand nombre d'échec thérapeutique et de problème d'observance, +18 et +10 points par rapport à la moyenne, et moins de simplification, -19 points (il n'y en a pas).
 
 Test du lien entre la charge virale à la fin du traitement et le motif d'arrêt.
 
