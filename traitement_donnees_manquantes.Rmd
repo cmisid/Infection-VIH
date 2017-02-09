@@ -352,3 +352,10 @@ clean_workspace()
 save(base_vih_df, file="base_vih_df_cleaned.RData")
 ```
 
+## Sauvegarde des index des lignes enlevées
+
+```{r}
+df_NaN <- dplyr::anti_join(base_vih, base_vih_df)
+save(df_NaN, file="df_NaN.RData")
+```
+

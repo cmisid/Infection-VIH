@@ -1,0 +1,222 @@
+---
+title: "Analyse de survie"
+author: "Axel Bellec"
+date: "2/2/2017"
+output: 
+  html_document: 
+    highlight: pygments
+    number_sections: yes
+    theme: flatly
+---
+
+**TODO**
+- Faire le tableau mais à des dates particulières par exemple tous les 6 mois, ou sinon en fonction des probas (pas de 0.1 en 0.1 par exemple).
+  + calculer le complémentaire de `survival`
+
+Tableau de résultat: Passer à la semaine ou au mois  
+
+- Construire la courbe de survie.
+  + intervalles de confiances pour le global
+
+Taux d'évênement au cours du temps  
+Bivarié: test du log-rank  
+Multivarié: modèle de Cox
+
+# Modélisation longitudinale par des méthodes d'analyse de survie
+
+```{r, echo=FALSE}
+setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/") # Axel
+# setwd(dir = "/Users/ismailaddou/Documents/R/Infection-VIH") #Ismail
+```
+
+## Définition de la variable arrêt/censure et du délai correspondant
+
+Notre objectif est ici d'étudier la survenue d'évènements au cours du temps. Cela implique d'estimer la probabilité de survenue d'un évènement au cours du temps et également évaluer l'impact d'un facteur sur la survenue de cet évènement.
+
+Afin de mettre en place une modélisation longitudinale par des méthodes d'analyse de survie, nous construisons notre jeu de données.
+
+```{r, include=FALSE}
+load(file = "../base_vih_df_cleaned.Rdata")
+
+library(dplyr)
+library(mosaic)
+
+df <- base_vih_df %>%
+  mutate(
+    duree=ifelse(
+      arret_trt == TRUE, 
+      as.numeric(d_arret-d_debtrt), 
+      as.numeric(d_point-d_debtrt))
+    ) %>%
+  mutate(arret_trt=as.numeric(arret_trt)) %>%
+  select(duree, arret_trt, typetrt, sexe) %>%
+  arrange(duree)
+```
+
+On charge notre jeu de données nettoyé des valeurs manquantes. Puis nous calculons le nombre de jours entre la date de point ($\Rightarrow$ date à laquelle l'étude se termine : fin du recueil des informations) et la date de début du traitement. Enfin, nous effectuons sur ce dataset un tri croissant selon le delta de jours.
+
+```{r, include=FALSE}
+# Load survival libraries
+library(survival)
+library(splines)
+```
+
+## Survie globale
+
+### Estimations par la méthode de Kaplan-Meier
+
+Nous estimons la survie selon la méthode de Kaplan-Meier. Cette méthode estime la survie à chaque survenue d'évênements et tient compte de la date exacte de l'évênement.
+
+```{r}
+fits <- survfit(Surv(df$duree, df$arret_trt)~1)
+fits
+```
+
+**Joseph**: commentaires généraux 
+
+```{r}
+format_survival_table <- function(fits) {
+  steps <- rev(seq(0, 1, by=0.05))
+  indexes <- c()
+  for (step in steps) {
+    indexes <- c(indexes, which.min(abs(fits$surv - step)))
+  }
+  
+  summary_fits <- data.frame(
+    data = cbind(
+      fits$time[indexes],
+      fits$n.risk[indexes],
+      fits$n.event[indexes],
+      fits$surv[indexes],
+      fits$std.err[indexes],
+      fits$lower[indexes],
+      fits$upper[indexes])
+  )
+  colnames(summary_fits) <- c("time", "n.risk", "n.event", "survival", "std.err", "lower 95% CI", "upper 95% CI")
+  summary_fits <- summary_fits[!duplicated(summary_fits),]
+  return(summary_fits)
+}
+
+summary_fits <- format_survival_table(fits)
+summary_fits
+```
+
+**Joseph**: commentaires sur le tableau :
+- ne pas oublier de dire que l'écart-type augmente avec le temps donc les IC sont de plus en plus larges
+
+### Représentation de la courbe de survie
+
+```{r}
+library(survminer)
+library(ggplot2)
+ggsurvplot(fits, 
+           risk.table = TRUE,
+           pval = TRUE,
+           break.time.by = 360)
+```
+
+**Joseph**: commentaires sur la courbe
+
+## Estimation de la survie suivant le type de traitement
+
+### Estimation de la survie par la méthode de Kaplan-Meier
+
+Notre but est ici de comparer les 3 types de traitement.
+
+```{r}
+fits_trt <- survfit(Surv(df$duree, df$arret_trt)~df$typetrt)
+fits_trt
+```
+
+```{r}
+summary(fits_trt)
+```
+```{r}
+for (i in 0:2) {
+  print(paste("df$typetrt==", i, sep=""))
+  df_tmp <- df[df$typetrt==i,]
+  fits <- survfit(Surv(df_tmp$duree, df_tmp$arret_trt)~df_tmp$typetrt)
+  print(format_survival_table(fits))
+}
+```
+
+
+### Représentation graphique
+
+La fonction de survie représente la probabilité pour qu'un patient n'est pas arrêté son traitement après un délai $t$ à compter d'un instant de référence, ou encore la proportion de personne poursuivant leur traitement après un délai $t$. Ici, le délai $t$, correspond à la date de début de traitement pour chaque patient.
+
+```{r}
+ggsurvplot(fits_trt, 
+           risk.table = TRUE, 
+           pval = TRUE,
+           conf.int = TRUE,
+           break.time.by = 360,
+           xlab = "Time in days",
+           risk.table.y.text.col = T, # colour risk table text annotations.
+           risk.table.y.text = FALSE, # show bars instead of names in text annotations
+           # in legend of risk table.
+           ncensor.plot = TRUE, # plot the number of censored subjects at time t
+           conf.int.style = "step",  # customize style of confidence intervals
+           surv.median.line = "hv",  # add the median survival pointer.
+           legend.labs = c("2IN+1IP", "2IN+INN", "autres"),    # change legend labels.
+           palette =  c("#FF5A5F", "#FFB400", "#007A87")
+)
+```
+
+On représente la survie de Kaplan-Meier avec en abscisse la durée de suivi et en ordonnée l'estimation de la fonction de survie. On note que le taux d'arrêt de traitement est identique pour les 3 traitements mais sur les 3 premières années l'arrêt est plus tardif pour le traitement 1.
+
+### Test du Log-Rank
+
+Pour montrer que le type de traitement a un lien avec la survie, nous mettons en oeuvre le test du *Log-Rank*. C'est un test de comparaison entre courbes de survie. Si 2 courbes de survie sont égales, le nombre d'arrêts de traitement devrait survenir au même rythme dans les 3 groupes.
+L'idée de base du test du Log-Rank est de comparer le nombre d'évènements observés et le nombre d'évènements attendus sous l'hypothèse nulle d'égalité de la survie dans les 3 groupes.
+
+L'hyptohèse nulle est l'égalité des probabilités de survie dans les 3 groupes : 
+
+\[ H_0 : S_{trt\_0}(t) = S_{trt\_1}(t) = S_{trt\_2}(t) \]
+
+On cherche si la différence observée entre les courbes de survie dans les groupes `trt_0`, `trt_1` et `trt_2` permet de rejeter l'hypothèse nulle.
+
+```{r}
+survdiff(Surv(df$duree, df$arret_trt)~df$typetrt)
+```
+Ici on rejette $H_0$ l'hypothèse d'égalité des courbes de survie et on conclut à une différence significative des délais de survenue de l'évènement dans les 3 groupes. On note que la plus grosse contribution vient du traitement 1 suivi du traitement 2. Cela signifie qu'il y a de gros écarts entre les effectifs observés et les effectifs attendus (théoriques). On conclut que la survenue d'un arrêt de traitement est plus tardive lorsque les patients prennent le traitement 1.
+
+### Modèle de Cox
+
+Le modèle de Cox permet d'exprimer le risque instantané de survenue de l'évènement en fonction de l'instant $t$ et des variables explicatives $X^j$. Il permet donc d'étudier l'effet éventuel de plusieurs covariables sur la survie.
+
+```{r}
+options(contrasts=c("contr.SAS","contr.SAS"))
+cox_trt <- coxph(Surv(df$duree, df$arret_trt)~df$typetrt)
+cox_trt
+```
+
+```{r}
+anova(cox_trt)
+```
+
+L'effet du type traitement est significatif sur le risque instantané d'arrêt de traitement.
+
+```{r}
+summary(cox_trt)
+```
+Ici on note que $e^{\beta_{\_trt\_0}}$ est inférieur à 1, ceci indique que des valeurs élevées de la caractéristique traitement 0 sont associées à un risque instantané d'arrêt de traitement plus faible. Ainsi, la survenue d'arrêt est environ 30% plus faible pour les patients ayant pris le traitement 1 plutôt que le traitement 2. Le risque instantané d'arrêt est multiplié par 0.87 lorsque que l'on compare le traitement 0 et le traitement 2. On constate donc que le traitement 2 augmente le risque instantané d'arrêt de traitement comparé aux 2 autres traitements.
+Notons également que pour la *p-value* du traitement 1 liée à la statistique $Z$ est inférieure à $5\%$ donc l'hypothèse que $\beta_{trt_1}=0$ est rejetée. Pour le traitement 0 on ne peut pas rejeter $H_0$ au seuil $\alpha=5\%$. 
+
+Nous cherchons à voir si l'hypothèse des risques proportionnels est raisonnable ou non. Nous avons mis en évidence un effet: cet effet est il constant au cours du temps ?
+
+`cox.zph` nous permet de tester le modèle des risques proportionnels de Cox.
+```{r}
+diag_trt <- cox.zph(cox_trt)
+diag_trt
+```
+
+Cette matrice contient une ligne pour chaque variable et une ligne pour le test global. La matrice contient le coefficient de corrélation entre la durée de survie transformée et les résidus de Schoenfeld, un $\mathcal{X}^2$, et une p-value. Pour le test global il n'y a pas de corrélation appropriée, c'est pourquoi nous avons un "NA". 
+
+```{r}
+par(mfrow=c(2,1))
+plot(diag_trt)
+```
+
+En abscisse nous avons la durée de suivi et en ordonnée nous avons les valeurs des résidus de Schoenfeld.
+
