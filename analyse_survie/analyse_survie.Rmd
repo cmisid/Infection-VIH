@@ -36,7 +36,7 @@ Notre objectif est ici d'étudier la survenue d'évènements au cours du temps. 
 Afin de mettre en place une modélisation longitudinale par des méthodes d'analyse de survie, nous construisons notre jeu de données.
 
 ```{r, include=FALSE}
-load(file = "base_vih_df_cleaned.Rdata")
+load(file = "../base_vih_df_cleaned.Rdata")
 
 library(dplyr)
 library(mosaic)
@@ -117,8 +117,6 @@ ggsurvplot(fits,
 
 **Joseph**: commentaires sur la courbe
 
-
-
 ## Estimation de la survie suivant le type de traitement
 
 ### Estimation de la survie par la méthode de Kaplan-Meier
@@ -133,6 +131,15 @@ fits_trt
 ```{r}
 summary(fits_trt)
 ```
+```{r}
+for (i in 0:2) {
+  print(paste("df$typetrt==", i, sep=""))
+  df_tmp <- df[df$typetrt==i,]
+  fits <- survfit(Surv(df_tmp$duree, df_tmp$arret_trt)~df_tmp$typetrt)
+  print(format_survival_table(fits))
+}
+```
+
 
 ### Représentation graphique
 
