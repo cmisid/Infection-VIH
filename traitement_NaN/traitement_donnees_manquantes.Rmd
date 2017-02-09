@@ -14,7 +14,7 @@ output:
 ## Importation des données
 
 ```{r, echo=FALSE}
-setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/") # Axel
+setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/traitement_NaN") # Axel
 # setwd(dir = "/Users/ismailaddou/Documents/R/Infection-VIH") #Ismail
 ```
 
@@ -22,7 +22,7 @@ setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/") #
 ```{r}
 library(readr)
 
-base_vih <- data.frame(read_csv("data/base_vih.csv", 
+base_vih <- data.frame(read_csv("../data/base_vih.csv", 
     col_types = cols(age = col_factor(levels = c("0", 
         "1", "2", "3")), cd4b1 = col_factor(levels = c("0", 
         "1", "2")), cd4b2 = col_factor(levels = c("0", 
@@ -50,7 +50,6 @@ On décide d'ajouter une variable booléene pour savoir si la personne atteinte 
 library(dplyr)
 base_vih_df <- base_vih %>%
     mutate(arret_trt=ifelse(is.na(d_arret), FALSE, TRUE))
-rm(base_vih)
 ```
 
 ## Visualisation des valeurs manquantes
@@ -82,7 +81,7 @@ Afin de traiter ces données manquantes, plusieurs stratégies sont possibles :
 
 ## Suppression des enregistrements avec trop de valeurs manquantes
 
-On décide de supprimer les lignes ou il y a des combinaisons de valeurs manquantes pour les facteurs :  
+On décide de supprimer les lignes ou il y a un trop grand nombre de combinaisons de valeurs manquantes pour les facteurs :  
 - `sida`
 - `cd4b1`
 - `cd4b2`
@@ -101,7 +100,6 @@ find_index_for_NaN_combinations <- function(nb_comb) {
     )
   )
 }
-
 
 # Then, we can delete those items
 base_vih_df <- base_vih_df[-find_index_for_NaN_combinations(5),]
@@ -203,7 +201,7 @@ rm(df_sida_sero_trt)
 On décide de mettre en place un apprentissage statistique pour remplacer les modalités du facteur `sida`.
 
 ```{r}
-train_rpart <- learn("sida", c("observ", "typetrt", "arret_trt", "debtrtc"))
+train_rpart <- learn("sida", c("observ", "typetrt", "arret_trt", "debtrtc", "cd4b1", "cvb1", "cd4b2"))
 ```
 
 
@@ -253,7 +251,7 @@ preds
 ```
 
 ```{r}
-base_vih_df <- replace_NaN_values("cd4b1", preds)
+# base_vih_df <- replace_NaN_values("cd4b1", preds)
 ```
 
 ```{r, include=FALSE}
@@ -283,7 +281,7 @@ preds
 ```
 
 ```{r}
-base_vih_df <- replace_NaN_values("cd4b2", preds)
+# base_vih_df <- replace_NaN_values("cd4b2", preds)
 ```
 
 ```{r, include=FALSE}
@@ -310,7 +308,7 @@ preds <- predict(train_rpart, test_df, type="raw")
 preds
 ```
 ```{r}
-base_vih_df <- replace_NaN_values("cvb1", preds)
+# base_vih_df <- replace_NaN_values("cvb1", preds)
 ```
 
 ```{r, include=FALSE}
@@ -338,19 +336,26 @@ preds
 ```
 
 ```{r}
-base_vih_df <- replace_NaN_values("cvb2", preds)
+# base_vih_df <- replace_NaN_values("cvb2", preds)
 ```
 
 ```{r, include=FALSE}
 clean_workspace()
 ```
 
+## Conclusion
+
+Comme nos classifieurs ont une précision très faible, alors on ne peut pas remplacer les valeurs manquantes. Nous avons donc décidé de supprimer les lignes avec des valeurs manquantes pour les variables "cd4b1", "cd4b2", "cvb1", "cvb2".
+```{r}
+base_vih_df <- base_vih_df[-find_index_for_NaN_combinations(1),]
+```
 
 ## Sauvegarde du jeu de données nettoyé
 
 ```{r}
 save(base_vih_df, file="base_vih_df_cleaned.RData")
 ```
+
 
 ## Sauvegarde des index des lignes enlevées
 
@@ -359,3 +364,4 @@ df_NaN <- dplyr::anti_join(base_vih, base_vih_df)
 save(df_NaN, file="df_NaN.RData")
 ```
 
+Nous avons donc conservé près des deux tiers des enregistrements.
