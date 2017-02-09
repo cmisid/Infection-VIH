@@ -329,7 +329,7 @@ df_motif
 ggplot(df_motif, aes(x = factor(motif), y = freq, fill = motif)) +
   geom_bar(stat="identity", width = 0.7) +
   geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), hjust = 1.25, family = "Circular Air Medium") +
-  labs(x = "Motif d'arrêt du traitement", y = "Fréquences (en %)", title="Proportion de patients", subtitle="en fonction de du motif d'arrêt du traitement") + 
+  labs(x = "Motif d'arrêt du traitement", y = "Fréquences (en %)", title="Proportion de patients", subtitle="en fonction du motif d'arrêt du traitement") + 
   guides(fill=FALSE) +
   theme_tech(theme="airbnb") +
   scale_fill_tech(theme="airbnb") + coord_flip() +
