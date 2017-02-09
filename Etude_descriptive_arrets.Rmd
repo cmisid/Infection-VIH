@@ -33,102 +33,117 @@ base_vih <- read_csv("data/base_vih.csv",
 ```
 
 
-```{r}
-vih = base_vih  
-vih["is_arret"] = is.na(vih$d_arret)
-vih<-vih[!(is.na(vih$sida) | is.na(vih$cd4b1) | is.na(vih$cd4b2) | is.na(vih$cvb1) | is.na(vih$cvb2)),]
+```{r, include=FALSE}
+
+#vih = base_vih  
+#vih["is_arret"] = is.na(vih$d_arret)
+#vih<-vih[!(is.na(vih$sida) | is.na(vih$cd4b1) | is.na(vih$cd4b2) | is.na(vih$cvb1) | #is.na(vih$cvb2)),]
+load(file = "./base_vih_df_cleaned.RData")
+colnames(base_vih_df)[18] <- "is_arret"
+vih <- base_vih_df
 attach(vih)
 ```
 
 ## Description des données
-On observe que 360 sur 1136 individus arrètent le traitement un équivalent de 31,6% de la population.
+Avant le traitement des données manquantes nous avions 360 sur 1136 individus qui arrètent leurs traitements soient 31,6% de la population. Le traitement des données a engendré la suppression d'un nombre de ligne ou il y'avait beaucoup d'attributs non renseignés à la fois. Après suppression, nous avons 274 sur 607 individus qui arrètent leurs traitements soient 45,14% de la population. Et c'est une bonne chose puisque on a un échantillon presque équilibré entre les patients qui ont arrêté et ceux qui n'ont pas arrêté.
 ```{r}
 summary(is_arret) 
 ```
-Dans un premier temps, nous allons essayer d'observer quels sont les facteurs qui ont engendré le plus d'arrêt de traitement chez les différents patients.
-### Facteur: Type de traitement
-On observe que presque 83% des individus qui ont arrêté le traitement ont suivi le traitement 0 et 1, d'ou l'hypothèse que le nouveau traitement (traitement 2) est plus efficace que les premiers, et entraîne de moins en moins d'arrêts.
-D'après le test de chi-2, on observe que la p-value <<< 5%, dalors l'indépendance est rejetée entre le type du traitement appliqué sur le patient et la variable réponse booléane `is_arret`.
+Dans un premier temps, nous allons essayer d’analyser l'indépendance des facteurs qui par rapport aux arrêts de traitement chez les différents patients.
 
+### Facteur: Type de traitement
+On observe que presque 85\% des individus qui ont suivi le traitement 2 ont arrêté, d'où l'hypothèse que le nouveau traitement (traitement 2) est moins efficace que les premiers, et entraîne de plus en plus d'arrêts.
+D'après le test de chi-2, on observe que la p-value << 5\% (p-value= 7.197e-11), alors l'hypothèse de l'indépendance entre le type du traitement appliqué sur le patient et la variable réponse booléenne `is\_arret` est rejetée.
 
 ```{r}
-x = table(is_arret, typetrt)
+x = table(vih$is_arret, vih$typetrt)
+prop.table(x,1)
 prop.table(x,2)
 
 chisq.test(x)
 ```
 
 ### Facteur: Age
-Si on ne considère pas la tranche d'age numéro 4, le facteur age n'a apparement pas beaucoup d'effet vis à vis le pourcentage des individus qui arrêtent le traitement, on remarque une légère hausse de pourcentage pour les individus agés par comparaison aux moins agés. 
-Le test de chi2 appuie notre hypothèse de départ puisque on a `p-value = 0.3315` qui montre que l'effet de l'age est non significatif p-value > 5%.
+Dans notre cas aucun patient ne dépasse 60 ans donc on ne considère pas la tranche d'age numéro 4. Le facteur age n'a apparement pas beaucoup d'effet vis à vis le pourcentage des individus qui arrêtent le traitement, on remarque une légère hausse de pourcentage d'arret pour les individus agés par comparaison aux individus moins agés. 
+Le test de chi2 appuie notre hypothèse de départ puisque on a `p-value = 0.3315` donc on rejette l'hypothèse de l'indépendance par rapport à la variable age.
 
 ```{r}
-x = table(is_arret, age)
+x = table(vih$is_arret, vih$age)
 prop.table(x,2)
 
 chisq.test(x[,1:4] )
 ```
 
 ### Facteur: observance (observ)
-75% des individus qui ont arreté le traitement sont marqués comme des patients qui ne respectent pas la posologie de leurs traitement, et 81% des individus qui n'ont pas arrêté le traitement ne respectent pas cette posologie non plus.
-Donc la variable posologie n'est pas une variable explicative, le test de chi2 le démontre puisque p-value > 5%.
+70% des individus qui ont arreté le traitement sont marqués comme des patients qui ne respectent pas la posologie de leurs traitement, et 76% des individus qui n'ont pas arrêté le traitement ne respectent pas cette posologie non plus, on ne peut tirer aucune conclusion de cette observation. Et visiblement, la variable posologie n'est pas une variable explicative, puisque selon le test de chi2 le facteur d'observance est indépendant de la variable réponse arret du traitement (p-value > 5%).
 
 ```{r}
-x = table(is_arret, observ)
+x = table(vih$is_arret, vih$observ)
 prop.table(x,1)
 
 chisq.test(x)
 ```
 
 ### Facteur: sida
+
 91,3% des gens qui ont arrêté le traitement ne sont pas encore passé à la phase du sida, mais aussi 83,6% des gens qui suivent toujours le traitement ne sont pas encore passé à cette phase. On peut remarquer que la plupart des individus qui ont arreté le traitement n'ont pas le sida, ce n'est que 8% qui ont le sida parmis ces gens.
-On fait un test de Chi2 pour voir est ce qu'il y a une dépendance entre l'arret du traitement et le facteur sida, et le résultat est p-value << 5%, on peut donc dire que l'effet du sida sur l'arret du traitement chez les patients est significatif.
+On fait un test de Chi2 pour voir est ce qu'il y a une dépendance entre l'arret du traitement et le facteur sida, et le résultat est p-value < 5%, on rejette donc l'hypothèse de l'indépendance entre le sida et l'arrêt du traitement.
+
 ```{r}
-x = table(is_arret, sida)
+summary(vih$sida)
+x = table(vih$is_arret, vih$sida)
+
 prop.table(x,1)
+prop.table(x,2)
 
 chisq.test(x)
 ```
 ### Facteur: sexe
-Le facteur sexe n'est pas significatif puisque la p-value > 5% selon le test de chi2.
+Le facteur sexe n’est pas significatif puisque la p-value > 5% (p-value = 0.6693) on accepte l’hypothèse de l’indépendance selon le test de chi2, et on conclut que l’arrêt du traitement agit indépendemment du sexe.
 ```{r}
-summary(sexe)
+summary(vih$sexe)
 
-x = table(is_arret, sexe)
+x = table(vih$is_arret, vih$sexe)
 prop.table(x,1)
 
 chisq.test(x)
 ```
 
 ### Facteur: conta (mode de contamination)
-Le mode de contamination est un facteur dont l'effet est significatif sur l'arret ou non des individus, puisque sa p-value < 5%
+Le facteur mode de contamination n’est pas significatif puisque la p-value < 5% (p-value = 0.6693) on rejette l’hypothèse de l’indépendance selon le test de chi2.
+
 ```{r}
+summary(vih$conta)
+x = table(vih$is_arret, vih$conta)
+prop.table(x,1)
+prop.table(x,2)
 chisq.test(x)
 ```
 
-### Facteur: cd4b1 et cd4b2
-Les deux facteurs cd4b1 et cd4b2 ne sont pas indépendantes avec le facteur arret du traitement puisque leurs p-value respectives est <<< 5%. 
+### Facteur: cd4b1 et cvb1
+La valeur de l'indicateur cd4b1 est le taux des lymphocites dans le sang du patient à l'initiation du traitement. Quand on applique le test de chi2 sur ce taux, p-value > 5% (p-value = 0.03052), d'où on accepte l'hypothèse de l'indépendance.  Pareil pour le taux du cvb1 qui est le taux de la charge virale dans le sang du patient, avec une p-value > 5% (p-value = 0.393), d'où on accepte l'hypothèse de l'indépendance?
+On peut conclure que les taux de mesures du début de traitement cd4b1 et cvb1 sont indépendants de l'arrêt du traitement d'un patient.
 ```{r}
-x = table(sida, cd4b1)
+x = table(vih$is_arret, vih$cd4b1)
 prop.table(x,1)
 
 chisq.test(x)
 
-x = table(sida, cd4b2)
+x = table(vih$is_arret, vih$cvb1)
 prop.table(x,1)
 
 chisq.test(x)
 ```
 
 ### Facteurs: cvb1 et cvb2
-Les deux facteurs cvb1 et indépendant car p-value << 5%, mais cvb2 est indépendant puisque p-value > 5%.
+La valeur de l'indicateur de cd4b2 et cvb2 sont respectivement les taux des lymphocites et la charge virale chez le patient dans l'arrêt du traitement, et on remarque qu'elles ont des p-value <<< 5%, d'où on rejette l'hypothèse de l'indépendance, justement car ce sont les indicateurs dont se base l'expert pour arrêter le traitement au patient.
 ```{r}
-x = table(sida, cvb1)
+x = table(vih$is_arret, vih$cd4b2)
 prop.table(x,1)
 
 chisq.test(x)
 
-x = table(sida, cvb2)
+x = table(vih$is_arret, vih$cvb2)
 prop.table(x,1)
 
 chisq.test(x)
@@ -140,43 +155,208 @@ Nous allons effectuer l'analyse de la variance à un seul facteur dans cette par
 ```{r}
 options(contrats=c("contr.SAS","contr.SAS")) 
 
-aov.cd4b1 = aov(is_arret ~ cd4b1)
+aov.cd4b1 = aov(vih$is_arret ~ vih$cd4b1)
 summary(aov.cd4b1)
 
-aov.cd4b2 = aov(is_arret ~ cd4b2)
+aov.cd4b2 = aov(vih$is_arret ~ vih$cd4b2)
 summary(aov.cd4b2)
 
-aov.cvb1 = aov(is_arret ~ cvb1)
+aov.cvb1 = aov(vih$is_arret ~ vih$cvb1)
 summary(aov.cvb1)
 
-aov.cvb2 = aov(is_arret ~ cvb2)
+aov.cvb2 = aov(vih$is_arret ~ vih$cvb2)
 summary(aov.cvb2)
 
-aov.typetrt = aov(is_arret ~ typetrt)
+aov.typetrt = aov(vih$is_arret ~ vih$typetrt)
 summary(aov.typetrt)
 
-aov.sida = aov(is_arret ~ sida)
+aov.sida = aov(vih$is_arret ~ vih$sida)
 summary(aov.sida)
 
-aov.conta = aov(is_arret ~ conta)
+aov.conta = aov(vih$is_arret ~ vih$conta)
 summary(aov.conta) 
+
+aov.sida = aov(vih$is_arret ~ vih$age)
+summary(aov.sida)
+
+aov.conta = aov(vih$is_arret ~ vih$observ)
+summary(aov.conta) 
+
+aov.sida = aov(vih$is_arret ~ vih$sexe)
+summary(aov.sida)
+ 
 ```
 
-### Regression logistique
+## Regression logistique sur l'arret du traitement
 
+Dans cette partie nous faisons la regression logistique sur l'arret du traitement par rapport aux variables typetrt, age, sida, sexe, conta, cd4b1, cd4b2, cvb1 et cvb2.
+Les résultats de cette analyse montrent que les facteurs age, sexe et cvb1 n'ont pas d'effet significatif sur l'arret ou non du traitement.
+
+Alors les facteurs significatifs sont le type du traitement (typetrt), sida, le mode de contamination (conta), par contre les facteurs cd4b2 et cvb2 sont les plus significatifs et c'est normal puisque ce sont les indicateurs qui poussent le médecin d'arreter le traitement à un individu.
+
+D'un autre côté on remarque que le type de traitement 2 a un écart très significatif par rapport aux traitements 1 et 2, avec une p-value d'écart (2.35e-07 <<< 5%), par contre le mode de contamination 3 et la tranche d'age 3 ont des effets presque significatifs par rapport aux autres niveaux correspondants (p-value < 10%).
 ```{r}
-reg.log = glm(vih$is_arret ~ vih$typetrt + vih$age + vih$observ + vih$sida + vih$sexe + vih$conta + vih$cd4b1 + vih$cd4b2 + vih$cvb1 + vih$cvb2)
+reg.log = glm(vih$is_arret ~ vih$typetrt + vih$age + vih$sida + vih$sexe + vih$conta + vih$cd4b1 + vih$cd4b2 + vih$cvb1 + vih$cvb2)
 anova(reg.log, test = "Chisq")
 summary(reg.log)
 ```
+
 ```{r}
 reg.log.backward = step(reg.log, direction = "backward")
 anova(reg.log.backward, test="Chisq")
 summary(reg.log.backward)
+```
+
+```{r}
+library(ROCR)
+prob.pred = predict(reg.log.backward, type="response")
+
+pred = prediction(prob.pred, vih$is_arret)
+perf = performance(pred, "tpr", "fpr")
+plot(perf)
+AUC=performance(pred, "auc")@y.values[[1]]
+AUC
 ```
 L'analyse suivante nous aidera a descerné les valeurs des facteurs qui mène un individu à arrêter son traitement. On observe que suivre le type de traitement 2 multiplie le risque d'arrêter le traitement par 0.82, et on observe aussi que le risque des patients dont le cvb2 appartient à la tranche 1 ou 2, est multiplié par 0,75 par rapport aux patients qui appartiennent à la tranche 0.
 ```{r}
  exp(cbind(OR = coef(reg.log.backward), confint(reg.log.backward)))
 ```
 
+## Regression logistique sur les motifs
+Dans cette partie nous allons étudier les facteurs qui favorisent les différent motifs ressortis suite à l'arret du traitement.
+```{r}
+unique(vih$motif)
+```
+Mis à part les motifs non renseignés, il y'a 4 niveaux de motifs: Intolérance/Toxicité, Simplification traitement, Echec thérapeutique, problème d'observance ou autres.
 
+Nous allons extraire de notre base que les données qui correspondent aux individus ayant arretés.
+```{r}
+arrets_vih <- vih[!(vih$is_arret == FALSE),] 
+
+library(dplyr)
+motif_arrets_vih <- arrets_vih %>% mutate(pb_intol = ifelse(arrets_vih$motif == 'Intolerance/Toxicite',TRUE,FALSE))
+
+motif_arrets_vih <- motif_arrets_vih %>% mutate(pb_echec = ifelse(arrets_vih$motif == 'Echec therapeutique',TRUE,FALSE))
+
+motif_arrets_vih <- motif_arrets_vih %>% mutate(pb_observ = ifelse(arrets_vih$motif == 'Pb d\'observance',TRUE,FALSE))
+
+motif_arrets_vih <- motif_arrets_vih %>% mutate(pb_simpli = ifelse(arrets_vih$motif == 'Simplification trt',TRUE,FALSE))
+```
+ A présent nous appliquerons les regressions logistiques pour chaque niveau de motif.
+ 
+ 
+### Intolerance/Toxicite
+
+Dans cette partie nous établirons la regression logistique sur le motif 'Intolerance/Toxicite' en se basant sur la nouvelle colonne dont les valeurs sont de type booléan qui prennent la valeur TRUE si le motif est 'Intolerance/Toxicite'.
+
+Le résultat de cette analyse montre que le facteur age est fortement lié à l'arret avec motif 'Intolerance/Toxicite' avec une p-value <<< 5% très significative (p-value = 0.000198). Puis les facteurs type traitement 'typetrt' (p-value = 0.001645) et observance 'observ' (p-value = 0.005626 ) viennent en second lieu avec des p-value significatives << 5%. 
+
+D'un autre côté on remarque que le type de traitement 2 a un écart très significatif par rapport aux traitements 1 et 0, avec une p-value d'écart (0.01541 < 5%), par contre le mode de contamination 3 et la tranche d'age 3 ont des effets presque significatifs par rapport aux autres niveaux correspondants (p-value < 10%).
+
+Finalement on essaie de sélectionner automatiquement les variables à partir d'un modèle dit "complet" selon une démarche descendante, en ne gardant que les facteurs qui impactent sur la variable réponse 'Intolerance/Toxicite', et le résultat de cette selection du modèle complet donne en sortie l'age, l'observance, le type du traitement et cvb1.
+
+motif_arrets_vih$typetrt  2   2.7343       604     133.35 0.0015508 ** 
+motif_arrets_vih$age      3   4.1967       601     129.16 0.0001817 ***
+motif_arrets_vih$observ   1   1.6277       600     127.53 0.0055167 ** 
+motif_arrets_vih$cvb1     2   1.1482       598     126.38 0.0661071 .  
+```{r}
+reg.log = glm(motif_arrets_vih$pb_intol ~ motif_arrets_vih$typetrt + motif_arrets_vih$age + motif_arrets_vih$sida + motif_arrets_vih$sexe + motif_arrets_vih$observ + motif_arrets_vih$conta + motif_arrets_vih$cd4b1 + motif_arrets_vih$cd4b2 + motif_arrets_vih$cvb1 + motif_arrets_vih$cvb2)
+anova(reg.log, test = "Chisq")
+summary(reg.log)
+
+reg.log.backward = step(reg.log, direction = "backward")
+anova(reg.log.backward, test="Chisq")
+summary(reg.log.backward)
+```
+La figure suivante représente la courbe ROC qui sert à évaluer notre modèle en calculant l'aire sous la courbe AUC. Pour notre motif 'Intolerance/Toxicite' AUC = 0.65.
+```{r}
+prob.pred = predict(reg.log.backward, type="response") 
+pred = prediction(prob.pred, motif_arrets_vih$pb_intol)
+perf = performance(pred, "tpr", "fpr")
+plot(perf)
+AUC=performance(pred, "auc")@y.values[[1]]
+AUC
+```
+###Echec thérapeutique
+Dans cette partie nous établirons la regression logistique sur le motif 'Echec thérapeutique' en se basant sur la nouvelle colonne dont les valeurs sont de type booléan qui prennent la valeur TRUE si le motif est 'Echec thérapeutique'.
+
+Le résultat de cette analyse montre que le facteur type traitement (typetrt) est fortement lié à l'arret avec motif 'Echec thérapeutique' avec une p-value <<< 5% très significative (p-value = 0.0009214). Puis le facteur observance (observ) avec une p-value << 5% très significative aussi (p-value = 0.001645). Finalement les deux mesures cd4b2 et cvb2 qui sont aussi très significatives, mais puisque elles jouent le rôle d'indicateur on déduit qu'il y'a une règle de décision entre leurs valeurs et l'arret du traitement en dépit du motif de l'arret.
+
+D'un autre côté on remarque que le type de traitement 2 et 1 ont un écart significatif par rapport au traitement 0 avec des p-value d'écart respectivement (p-value = 0.00264 << 5%) et (p-value = 0.01167), l'observance de valeur a un effet très significatif avec une p-value << 5% (p-value = 0.0080200), et comme prévu quand la valeur de cvb2 qui est la charge viral à l'arret quand elle appartient au niveau 2 cela indique que le patient doit arrêter le traitement. On observe que la p-value tend vers zero <<< 5% (p-value = 1.469e-10) et cela appuie notre hypothèse que le cd4b2 et le cvb2 ne sont que des indicateurs.
+
+Finalement on essaie de sélectionner automatiquement les variables à partir d'un modèle dit "complet" selon une démarche descendante, en ne gardant que les facteurs qui impactent sur la variable réponse 'Echec thérapeutique', et le résultat de cette selection du modèle complet donne en sortie le type de traitement (typetrt), le sida (sida), l'observance (observ) et le cvb2 bien évidemment. 
+
+```{r}
+reg.log = glm(motif_arrets_vih$pb_echec ~ motif_arrets_vih$typetrt + motif_arrets_vih$age + motif_arrets_vih$sida + motif_arrets_vih$sexe + motif_arrets_vih$observ + motif_arrets_vih$conta + motif_arrets_vih$cd4b1 + motif_arrets_vih$cd4b2 + motif_arrets_vih$cvb1 + motif_arrets_vih$cvb2)
+anova(reg.log, test = "Chisq")
+summary(reg.log)
+
+reg.log.backward = step(reg.log, direction = "backward")
+anova(reg.log.backward, test="Chisq")
+summary(reg.log.backward)
+```
+La figure suivante représente la courbe ROC qui sert à évaluer notre modèle en calculant l'aire sous la courbe AUC. Pour notre motif 'Echec thérapeutique' AUC = 0.77 qui est un bon résultat pour notre modèle.
+```{r}
+prob.pred = predict(reg.log.backward, type="response") 
+pred = prediction(prob.pred, motif_arrets_vih$pb_echec)
+perf = performance(pred, "tpr", "fpr")
+plot(perf)
+AUC=performance(pred, "auc")@y.values[[1]]
+AUC
+```
+
+### Problème d'observance
+Dans cette partie nous établirons la regression logistique sur le motif 'Problème d'observance' en se basant sur la nouvelle colonne dont les valeurs sont de type booléan qui prennent la valeur TRUE si la valeur de la colonne motif d'arret est bien 'Pb d'observance'.
+
+Le résultat de cette analyse montre que seul le facteur 'age' est significativement lié aux arrets de traitements dus aux problèmes d'observances avec une p-value < 5% (0.0383560) , ce qui est innatendu puisque normalement le facteur observance est un indicateur sur lequel se base l'expert pour définir le motif d'arrêt du traitement.
+
+D'un autre côté on remarque que la tranche d'age 1 et 3 ont un écart significatif par rapport à l'age 0 avec des p-value d'écart respectivement (p-value = 0.006539 << 5%) et (p-value = 0.006539).
+
+Finalement on essaie de sélectionner automatiquement les variables à partir d'un modèle dit "complet" selon une démarche descendante, en ne gardant que les facteurs qui impactent sur la variable réponse 'Pb d'observance', et le résultat de cette selection du modèle complet donne en sortie l'age, l'observance (observ) et le cvb2.
+```{r}
+reg.log = glm(motif_arrets_vih$pb_observ ~ motif_arrets_vih$typetrt + motif_arrets_vih$age + motif_arrets_vih$sida + motif_arrets_vih$sexe + motif_arrets_vih$observ + motif_arrets_vih$conta + motif_arrets_vih$cd4b1 + motif_arrets_vih$cd4b2 + motif_arrets_vih$cvb1 + motif_arrets_vih$cvb2)
+anova(reg.log, test = "Chisq")
+summary(reg.log)
+
+reg.log.backward = step(reg.log, direction = "backward")
+anova(reg.log.backward, test="Chisq")
+summary(reg.log.backward)
+```
+La figure suivante représente la courbe ROC qui sert à évaluer notre modèle en calculant l'aire sous la courbe AUC. Pour notre motif 'Echec thérapeutique' AUC = 0.75.
+```{r}
+prob.pred = predict(reg.log.backward, type="response") 
+pred = prediction(prob.pred, motif_arrets_vih$pb_observ)
+perf = performance(pred, "tpr", "fpr")
+plot(perf)
+AUC=performance(pred, "auc")@y.values[[1]]
+AUC
+```
+### Simplification de traitement
+Dans cette partie nous établirons la regression logistique sur le motif 'Simplification traitement' en se basant sur la nouvelle colonne dont les valeurs sont de type booléan qui prennent la valeur TRUE si le motif est 'Simplification trt'.
+
+Le résultat de cette analyse montre que le facteur age est significatif avec une p-value < 5%  (p-value = 0.04089). Et les deux mesures cd4b2 et cvb2 qui sont aussi très significatives, mais puisque elles jouent le rôle d'indicateur on déduit qu'il y'a une règle de décision entre leurs valeurs et l'arret du traitement en dépit du motif de l'arret. 
+
+Finalement on essaie de sélectionner automatiquement les variables à partir d'un modèle dit "complet" selon une démarche descendante, en ne gardant que les facteurs qui impactent sur la variable réponse 'Echec thérapeutique', et le résultat de cette selection du modèle complet donne en sortie l'observance (observ), cd4b1, cd4b2, cvb1 et le cvb2. 
+motif_arrets_vih$observ  1   0.4438       605     95.227   0.06969 .  
+motif_arrets_vih$cd4b1   2   0.1425       603     95.084   0.58968    
+motif_arrets_vih$cd4b2   2   6.5843       601     88.500 2.514e-11 ***
+motif_arrets_vih$cvb1    2   0.6676       599     87.832   0.08419 .  
+motif_arrets_vih$cvb2    2   7.3036       597     80.529 1.748e-12 ***
+```{r}
+reg.log = glm(motif_arrets_vih$pb_simpli ~ motif_arrets_vih$typetrt + motif_arrets_vih$age + motif_arrets_vih$sida + motif_arrets_vih$sexe + motif_arrets_vih$observ + motif_arrets_vih$conta + motif_arrets_vih$cd4b1 + motif_arrets_vih$cd4b2 + motif_arrets_vih$cvb1 + motif_arrets_vih$cvb2)
+anova(reg.log, test = "Chisq")
+summary(reg.log)
+
+reg.log.backward = step(reg.log, direction = "backward")
+anova(reg.log.backward, test="Chisq")
+summary(reg.log.backward)
+```
+La figure suivante représente la courbe ROC qui sert à évaluer notre modèle en calculant l'aire sous la courbe AUC. Pour notre motif 'Echec thérapeutique' AUC =0.784 qui est un résultat très bon pour notre modèle.
+```{r}
+prob.pred = predict(reg.log.backward, type="response") 
+pred = prediction(prob.pred, motif_arrets_vih$pb_simpli)
+perf = performance(pred, "tpr", "fpr")
+plot(perf)
+AUC=performance(pred, "auc")@y.values[[1]]
+AUC
+```
