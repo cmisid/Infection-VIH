@@ -10,7 +10,7 @@ Dans un premier temps nous ajoutons une colonne de booléans qui prend la valeur
 
 ```{r, include=FALSE}
 library(readr)
-base_vih <- read_csv("data/base_vih.csv", 
+base_vih <- read_csv("../data/base_vih.csv", 
     col_types = cols(age = col_factor(levels = c("0", 
         "1", "2", "3")), cd4b1 = col_factor(levels = c("0", 
         "1", "2")), cd4b2 = col_factor(levels = c("0", 
@@ -38,7 +38,7 @@ base_vih <- read_csv("data/base_vih.csv",
 #vih = base_vih  
 #vih["is_arret"] = is.na(vih$d_arret)
 #vih<-vih[!(is.na(vih$sida) | is.na(vih$cd4b1) | is.na(vih$cd4b2) | is.na(vih$cvb1) | #is.na(vih$cvb2)),]
-load(file = "./base_vih_df_cleaned.RData")
+load(file = "../base_vih_df_cleaned.RData")
 colnames(base_vih_df)[18] <- "is_arret"
 vih <- base_vih_df
 attach(vih)

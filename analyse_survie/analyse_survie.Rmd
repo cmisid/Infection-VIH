@@ -22,10 +22,17 @@ Taux d'évênement au cours du temps
 Bivarié: test du log-rank  
 Multivarié: modèle de Cox
 
+```{r, include=FALSE}
+wants <- c("dplyr", "mosaic", "survival", "splines", "survminer", "ggplot2")
+has <- wants %in% rownames(installed.packages())
+if(any(!has)) install.packages(wants[!has])
+```
+
+
 # Modélisation longitudinale par des méthodes d'analyse de survie
 
 ```{r, echo=FALSE}
-setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/") # Axel
+setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/analyse_survie") # Axel
 # setwd(dir = "/Users/ismailaddou/Documents/R/Infection-VIH") #Ismail
 ```
 
@@ -49,7 +56,7 @@ df <- base_vih_df %>%
       as.numeric(d_point-d_debtrt))
     ) %>%
   mutate(arret_trt=as.numeric(arret_trt)) %>%
-  select(duree, arret_trt, typetrt, sexe) %>%
+  select(duree, arret_trt, typetrt, sexe, sida, observ, conta, cd4b1, cd4b2, cvb1, cvb2, age) %>%
   arrange(duree)
 ```
 
@@ -88,11 +95,12 @@ format_survival_table <- function(fits) {
       fits$n.risk[indexes],
       fits$n.event[indexes],
       fits$surv[indexes],
+      1-fits$surv[indexes],
       fits$std.err[indexes],
       fits$lower[indexes],
       fits$upper[indexes])
   )
-  colnames(summary_fits) <- c("time", "n.risk", "n.event", "survival", "std.err", "lower 95% CI", "upper 95% CI")
+  colnames(summary_fits) <- c("time", "n.risk", "n.event", "survival", "1-survival", "std.err", "lower 95% CI", "upper 95% CI")
   summary_fits <- summary_fits[!duplicated(summary_fits),]
   return(summary_fits)
 }
@@ -128,9 +136,8 @@ fits_trt <- survfit(Surv(df$duree, df$arret_trt)~df$typetrt)
 fits_trt
 ```
 
-```{r}
-summary(fits_trt)
-```
+Nous n'avons pas exactement le même nombre d'évênements pour chaque type de traitement mais ils sont tout de même assez proches. On note qu'il y a eu plus d'évênements d'arrêts de traitement pour les patients ayant suivi le traitement "autres" (mono, bi, quadrithérapie).
+
 ```{r}
 for (i in 0:2) {
   print(paste("df$typetrt==", i, sep=""))
@@ -140,6 +147,7 @@ for (i in 0:2) {
 }
 ```
 
+**Joseph**: commentaires sur les 3 tableaux
 
 ### Représentation graphique
 
@@ -163,7 +171,7 @@ ggsurvplot(fits_trt,
 )
 ```
 
-On représente la survie de Kaplan-Meier avec en abscisse la durée de suivi et en ordonnée l'estimation de la fonction de survie. On note que le taux d'arrêt de traitement est identique pour les 3 traitements mais sur les 3 premières années l'arrêt est plus tardif pour le traitement 1.
+On représente la survie de Kaplan-Meier avec en abscisse la durée de suivi et en ordonnée l'estimation de la fonction de survie. On note que le taux d'arrêt de traitement est quasiment identique pour les 3 traitements mais sur les 3 premières années l'arrêt est plus tardif pour le traitement 1 (2IN+INN).
 
 ### Test du Log-Rank
 
@@ -179,7 +187,17 @@ On cherche si la différence observée entre les courbes de survie dans les grou
 ```{r}
 survdiff(Surv(df$duree, df$arret_trt)~df$typetrt)
 ```
-Ici on rejette $H_0$ l'hypothèse d'égalité des courbes de survie et on conclut à une différence significative des délais de survenue de l'évènement dans les 3 groupes. On note que la plus grosse contribution vient du traitement 1 suivi du traitement 2. Cela signifie qu'il y a de gros écarts entre les effectifs observés et les effectifs attendus (théoriques). On conclut que la survenue d'un arrêt de traitement est plus tardive lorsque les patients prennent le traitement 1.
+Ici on rejette $H_0$ l'hypothèse d'égalité des courbes de survie et on conclut à une différence significative des délais de survenue de l'évènement dans les 3 groupes. On note que la plus grosse contribution vient du traitement 1 suivi du traitement 2. Cela signifie qu'il y a de gros écarts entre les effectifs observés et les effectifs attendus (théoriques). On conclut que la survenue d'un arrêt de traitement est plus tardive lorsque les patients prennent le traitement 1. Cela confirme ce que nous avons pu voir sur le graphique représentant la fonction de survie.
+
+On décide de mettre en oeuvre le test du log-rank pour tous les facteurs possibles et de ne retenir que les facteurs qui ont des p-values significatives. 
+
+```{r}
+# for (facteur in colnames(df)) {
+#   tmp_survdiff <- survdiff(Surv(df$duree, df$arret_trt)~df[,facteur])
+#   print(tmp_survdiff)
+# }
+```
+
 
 ### Modèle de Cox
 
@@ -187,35 +205,37 @@ Le modèle de Cox permet d'exprimer le risque instantané de survenue de l'évè
 
 ```{r}
 options(contrasts=c("contr.SAS","contr.SAS"))
-cox_trt <- coxph(Surv(df$duree, df$arret_trt)~df$typetrt)
-cox_trt
+cox_all <- coxph(Surv(df$duree, df$arret_trt) ~ df$typetrt + df$sida + df$observ + df$sexe + df$conta + df$age + df$cd4b1 + df$cd4b2 + df$cvb1 + df$cvb2)
 ```
 
 ```{r}
-anova(cox_trt)
+anova(cox_all)
 ```
+On note ici que les facteurs `typetrt`, `cd4b2` et `cvb2` sont très significatifs (p-value $\ll 0.001$) sur le risque instantané d'arrêt de traitement. Les facteurs `sida` et `conta` le sont aussi (p-value $\ll 0.01$). 
 
-L'effet du type traitement est significatif sur le risque instantané d'arrêt de traitement.
 
 ```{r}
-summary(cox_trt)
+summary(cox_all)
 ```
-Ici on note que $e^{\beta_{\_trt\_0}}$ est inférieur à 1, ceci indique que des valeurs élevées de la caractéristique traitement 0 sont associées à un risque instantané d'arrêt de traitement plus faible. Ainsi, la survenue d'arrêt est environ 30% plus faible pour les patients ayant pris le traitement 1 plutôt que le traitement 2. Le risque instantané d'arrêt est multiplié par 0.87 lorsque que l'on compare le traitement 0 et le traitement 2. On constate donc que le traitement 2 augmente le risque instantané d'arrêt de traitement comparé aux 2 autres traitements.
-Notons également que pour la *p-value* du traitement 1 liée à la statistique $Z$ est inférieure à $5\%$ donc l'hypothèse que $\beta_{trt_1}=0$ est rejetée. Pour le traitement 0 on ne peut pas rejeter $H_0$ au seuil $\alpha=5\%$. 
+Nous allons ici décrire les facteurs et leurs modalités significatives en commençant par ceux les plus significatifs.
+Pour chaque *p-value* liée à la statistique $Z$, on va regarder si elle est inférieure à $5\%$ pour vérifier que l'hypothèse que $\beta_{coeff}=0$ puisse être rejetée. Si ce n'est pas le cas, on ne pourra pas rejeter $H_0$ au seuil $\alpha=5\%$ et la modalité du facteur ne sera pas considérée. 
+
+Tout d'abord, on note que $e^{\beta_{cd4b2_0}}$ est supérieur à 1, ceci indique que des valeurs élevées de la $cd4b2\_0$ sont associées à un risque instantané d'arrêt de traitement plus élevé. Le risque instantané d'arrêt est multiplié par $1.90$ lorsque que l'on compare le taux de $cd4b2\_1$ au traitement  $cd4b2\_2$. 
+Lorsque la charge virale est en dessous de $1.7$ à l'arrêt du traitement ou à la fin du suivi sans arrêt, on remarque que $e^{\beta_{cvb2_0}}=0.47$ et est par conséquent inférieur à 1. Ceci indique que des valeurs élevées de la caractéristique $cvb2\_0$ sont associées à un risque instantané d'arrêt de traitement plus faible. Ainsi, la survenue d'arrêt est environ 50% plus faible pour les patients ayant pris un charge virale inférieure à 7 plutôt que ceux ayant une charge virale de 4 et plus. Concernant le mode contamination, tous les modes de contaminations ont un risque instantané d'arrêt plus élevé que la catégorie autres (transfusé, hémophile, ...).
+
 
 Nous cherchons à voir si l'hypothèse des risques proportionnels est raisonnable ou non. Nous avons mis en évidence un effet: cet effet est il constant au cours du temps ?
 
 `cox.zph` nous permet de tester le modèle des risques proportionnels de Cox.
 ```{r}
-diag_trt <- cox.zph(cox_trt)
-diag_trt
+diag_all <- cox.zph(cox_all)
+diag_all
 ```
 
 Cette matrice contient une ligne pour chaque variable et une ligne pour le test global. La matrice contient le coefficient de corrélation entre la durée de survie transformée et les résidus de Schoenfeld, un $\mathcal{X}^2$, et une p-value. Pour le test global il n'y a pas de corrélation appropriée, c'est pourquoi nous avons un "NA". 
 
 ```{r}
-par(mfrow=c(2,1))
-plot(diag_trt)
+ggcoxzph(diag_all)
 ```
 
 En abscisse nous avons la durée de suivi et en ordonnée nous avons les valeurs des résidus de Schoenfeld.
