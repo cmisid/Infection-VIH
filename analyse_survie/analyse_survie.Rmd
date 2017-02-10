@@ -189,29 +189,32 @@ survdiff(Surv(df$duree, df$arret_trt)~df$typetrt)
 ```
 Ici on rejette $H_0$ l'hypothèse d'égalité des courbes de survie et on conclut à une différence significative des délais de survenue de l'évènement dans les 3 groupes. On note que la plus grosse contribution vient du traitement 1 suivi du traitement 2. Cela signifie qu'il y a de gros écarts entre les effectifs observés et les effectifs attendus (théoriques). On conclut que la survenue d'un arrêt de traitement est plus tardive lorsque les patients prennent le traitement 1. Cela confirme ce que nous avons pu voir sur le graphique représentant la fonction de survie.
 
-On décide de mettre en oeuvre le test du log-rank pour tous les facteurs possibles et de ne retenir que les facteurs qui ont des p-values significatives. 
+On décide de mettre en oeuvre le test du log-rank pour tous les facteurs possibles et de ne retenir que les facteurs qui ont des p-values significatives. On ne prend pas les variables qui concernent la fin du traitement ou du suivi comme `cd4b2` ou `cvb2`.
 
 ```{r}
-# for (facteur in colnames(df)) {
-#   tmp_survdiff <- survdiff(Surv(df$duree, df$arret_trt)~df[,facteur])
-#   print(tmp_survdiff)
-# }
+facteurs <- c("typetrt", "sexe", "sida", "observ", "conta", "cd4b1", "cvb1", "age")
+for (facteur in facteurs) {
+  tmp_survdiff <- survdiff(Surv(df$duree, df$arret_trt) ~ df[, facteur])
+  p_value <- pchisq(tmp_survdiff$chisq, length(tmp_survdiff$n) - 1, lower.tail = FALSE)
+  print(sprintf("%s: %s", facteur, round(p_value, 4)))
+}
 ```
-
+Ici nous constatons que seules les facteurs `typetrt`, `sida`, et `conta` sont significatif au seuil $\alpha=5\%$.
 
 ### Modèle de Cox
 
 Le modèle de Cox permet d'exprimer le risque instantané de survenue de l'évènement en fonction de l'instant $t$ et des variables explicatives $X^j$. Il permet donc d'étudier l'effet éventuel de plusieurs covariables sur la survie.
+En effectuant le test du Log-Rank sur chaque facteur nous en avons conclu que nous conserverions seulement 3 covariables explicatives.
 
 ```{r}
-options(contrasts=c("contr.SAS","contr.SAS"))
-cox_all <- coxph(Surv(df$duree, df$arret_trt) ~ df$typetrt + df$sida + df$observ + df$sexe + df$conta + df$age + df$cd4b1 + df$cd4b2 + df$cvb1 + df$cvb2)
+options(contrasts=c("contr.treatment","contr.treatment"))
+cox_all <- coxph(Surv(df$duree, df$arret_trt) ~ df$typetrt + df$sida + df$conta)
 ```
 
 ```{r}
 anova(cox_all)
 ```
-On note ici que les facteurs `typetrt`, `cd4b2` et `cvb2` sont très significatifs (p-value $\ll 0.001$) sur le risque instantané d'arrêt de traitement. Les facteurs `sida` et `conta` le sont aussi (p-value $\ll 0.01$). 
+On note ici que les facteurs `typetrt`, `sida` sont très significatifs (p-value $\ll 0.01$) sur le risque instantané d'arrêt de traitement. La covariable `conta` est elle aussi significative.
 
 
 ```{r}
@@ -220,9 +223,9 @@ summary(cox_all)
 Nous allons ici décrire les facteurs et leurs modalités significatives en commençant par ceux les plus significatifs.
 Pour chaque *p-value* liée à la statistique $Z$, on va regarder si elle est inférieure à $5\%$ pour vérifier que l'hypothèse que $\beta_{coeff}=0$ puisse être rejetée. Si ce n'est pas le cas, on ne pourra pas rejeter $H_0$ au seuil $\alpha=5\%$ et la modalité du facteur ne sera pas considérée. 
 
-Tout d'abord, on note que $e^{\beta_{cd4b2_0}}$ est supérieur à 1, ceci indique que des valeurs élevées de la $cd4b2\_0$ sont associées à un risque instantané d'arrêt de traitement plus élevé. Le risque instantané d'arrêt est multiplié par $1.90$ lorsque que l'on compare le taux de $cd4b2\_1$ au traitement  $cd4b2\_2$. 
-Lorsque la charge virale est en dessous de $1.7$ à l'arrêt du traitement ou à la fin du suivi sans arrêt, on remarque que $e^{\beta_{cvb2_0}}=0.47$ et est par conséquent inférieur à 1. Ceci indique que des valeurs élevées de la caractéristique $cvb2\_0$ sont associées à un risque instantané d'arrêt de traitement plus faible. Ainsi, la survenue d'arrêt est environ 50% plus faible pour les patients ayant pris un charge virale inférieure à 7 plutôt que ceux ayant une charge virale de 4 et plus. Concernant le mode contamination, tous les modes de contaminations ont un risque instantané d'arrêt plus élevé que la catégorie autres (transfusé, hémophile, ...).
-
+Tout d'abord, on note que $e^{\beta_{sida_1}}$ est supérieur à 1, ceci indique que des valeurs élevées de la $sida\_1$ sont associées à un risque instantané d'arrêt de traitement plus élevé. Le risque instantané d'arrêt est multiplié par $1.41$ lorsque que l'on compare le patient a le sida. 
+Concernant le type de traitement, le traitement 1 n'est pas significatif, mais le traitement 2 l'est. Nous pouvons donc interpréter l'exponentielle du coefficient associé. Comme cette valeur est supérieure à 1, cela indique que des valeurs élevées du traitement "autres" sont associées à un risque instantané d'arrêt de traitement lui aussi plus élevé. Ce constat est similaire pour la modalité 2 du facteur contamination. Le risque instantané d'arrêt de traitement est multiplié par $1.41$ lorsque le patient est contaminé par voie intraveineuse par rapport à un patient contaminé de manière hétérosexuelle. 
+Lorsque les patients sont contaminés par un autre mode (transfusion, hémophilie), le risque instantané d'arrêt de traitement est plus faible ($~\times 0.67$).
 
 Nous cherchons à voir si l'hypothèse des risques proportionnels est raisonnable ou non. Nous avons mis en évidence un effet: cet effet est il constant au cours du temps ?
 
@@ -233,10 +236,22 @@ diag_all
 ```
 
 Cette matrice contient une ligne pour chaque variable et une ligne pour le test global. La matrice contient le coefficient de corrélation entre la durée de survie transformée et les résidus de Schoenfeld, un $\mathcal{X}^2$, et une p-value. Pour le test global il n'y a pas de corrélation appropriée, c'est pourquoi nous avons un "NA". 
+Le test global de validité du modèle des risques proportionnels de Cox conduit à rejeter $H_0$ : certaines covariables on un effet dépendant du temps. C'est le type de traitement 2 qui conduit à rejeter cette hypothèse (p-value $< 5\%$).
 
 ```{r}
 ggcoxzph(diag_all)
 ```
 
 En abscisse nous avons la durée de suivi et en ordonnée nous avons les valeurs des résidus de Schoenfeld.
+
+Tout éloignement de l’horizontale traduit un effet dépendant du temps. L’effet du traitement 2 décroit linéairement avec le temps, il n'est donc pas toujours constant. Les autres effets ont l’air plutôt fixes.
+
+Nous avons essayé ensuite de mettre en place un modèle de sélection descendante pour choisir les facteurs les plus significatifs et cette méthode de sélection n'a retiré aucun des 3 facteurs déjà présents.
+
+
+```{r}
+cox_back <- step(cox_all, direction="backward")
+summary(cox_back)
+anova(cox_back)
+```
 
