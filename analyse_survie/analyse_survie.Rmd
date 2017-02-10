@@ -9,31 +9,17 @@ output:
     theme: flatly
 ---
 
-**TODO**
-- Faire le tableau mais à des dates particulières par exemple tous les 6 mois, ou sinon en fonction des probas (pas de 0.1 en 0.1 par exemple).
-  + calculer le complémentaire de `survival`
-
-Tableau de résultat: Passer à la semaine ou au mois  
-
-- Construire la courbe de survie.
-  + intervalles de confiances pour le global
-
-Taux d'évênement au cours du temps  
-Bivarié: test du log-rank  
-Multivarié: modèle de Cox
-
 ```{r, include=FALSE}
 wants <- c("dplyr", "mosaic", "survival", "splines", "survminer", "ggplot2")
 has <- wants %in% rownames(installed.packages())
 if(any(!has)) install.packages(wants[!has])
 ```
 
-
 # Modélisation longitudinale par des méthodes d'analyse de survie
 
 ```{r, echo=FALSE}
-setwd(dir = "~/Documents/Infection-VIH/analyse_survie/") # Joseph
-#setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/analyse_survie") # Axel
+# setwd(dir = "~/Documents/Infection-VIH/analyse_survie/") # Joseph
+setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/analyse_survie") # Axel
 # setwd(dir = "/Users/ismailaddou/Documents/R/Infection-VIH") #Ismail
 ```
 
