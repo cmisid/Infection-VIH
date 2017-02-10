@@ -12,8 +12,8 @@ output:
 
 ```{r, echo=FALSE}
 
-setwd(dir = "~/Documents/Infection-VIH/analyse_descriptive/")
-#setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/")
+# setwd(dir = "~/Documents/Infection-VIH/analyse_descriptive/")
+setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/analyse_descriptive")
 ```
 
 
@@ -38,18 +38,6 @@ font_import(pattern = 'Circular', prompt=FALSE)
 load(file = "../base_vih_df_cleaned.RData")
 
 library(dplyr)
-library(mosaic)
-
-df <- base_vih_df %>%
-  mutate(
-    duree=ifelse(
-      arret_trt == TRUE, 
-      as.numeric(d_arret-d_debtrt), 
-      as.numeric(d_point-d_debtrt))
-    ) %>%
-  mutate(arret_trt=as.numeric(arret_trt)) %>%
-  select(duree, arret_trt, typetrt, sexe) %>%
-  arrange(duree)
 ```
 
 
@@ -88,8 +76,7 @@ df_age <- base_vih %>%
   summarise(count=n()) %>% 
   mutate(freq=100*count/sum(count))
 
-#library(ggtech)
-library(ggtern)
+library(ggtech)
 library(ggplot2)
 ggplot(df_age, aes(x = factor(age), y = freq, fill = age)) +
   geom_bar(stat="identity", width = 0.7) +
@@ -97,7 +84,8 @@ ggplot(df_age, aes(x = factor(age), y = freq, fill = age)) +
   labs(x = "Tranches d'âge des patients", y = "Fréquences (en %)", fill = "age", title="Proportion de patients", subtitle="par tranche d'âge") + 
   guides(fill=FALSE) + 
   theme_tech(theme="airbnb") +
-  scale_fill_tech(theme="airbnb") 
+  scale_fill_tech(theme="airbnb") +
+  ggsave(filename = 'graphs/graph_age.png', width = 8, height = 5)
 
 
 df_age
@@ -120,7 +108,8 @@ ggplot(df_sexe, aes(x = factor(sexe), y = freq, fill = sexe)) +
   labs(x = "Genre des patients", y = "Fréquences (en %)", fill = "sexe", title="Proportion de patients", subtitle="par genre") + 
   guides(fill=FALSE) +
   theme_tech(theme="airbnb") +
-  scale_fill_tech(theme="airbnb") 
+  scale_fill_tech(theme="airbnb") +
+  ggsave(filename = 'graphs/graph_sexe.png', width = 8, height = 5)
 ```
 
 Les hommes représentent deux tiers des patients (770), contre un tier pour les femmes (336).
@@ -139,7 +128,8 @@ ggplot(df_observ, aes(x = factor(observ), y = freq, fill = observ)) +
   labs(x = "Observance", y = "Fréquences (en %)", title="Proportion de patients", subtitle="en fonction de la consultation d'observance") + 
   guides(fill=FALSE) +
   theme_tech(theme="airbnb") +
-  scale_fill_tech(theme="airbnb") 
+  scale_fill_tech(theme="airbnb") +
+  ggsave(filename = 'graphs/graph_observ.png', width = 8, height = 5)
 ```
 
 Environ 4 patients sur 5, $79.4\%$, ne suit pas leur traitement correctement.
@@ -170,7 +160,8 @@ ggplot(df_sida, aes(x = factor(sida), y = freq, fill = sida)) +
   labs(x = "Patient atteint du sida", y = "Fréquences (en %)", title="Proportion de patients", subtitle="ayant atteint le stade du sida") + 
   guides(fill=FALSE) +
   theme_tech(theme="airbnb") +
-  scale_fill_tech(theme="airbnb") 
+  scale_fill_tech(theme="airbnb") +
+  ggsave(filename = 'graphs/graph_sida.png', width = 8, height = 5)
 ```
 
 $13,82\%$ des patients atteints par le VIH ont atteint le stade du SIDA.
@@ -191,7 +182,8 @@ ggplot(df_conta, aes(x = factor(conta), y = freq, fill = conta)) +
   labs(x = "Mode de contamination", y = "Fréquences (en %)", title="Proportion de patients", subtitle="suivant le mode de contamination") + 
   guides(fill=FALSE) +
   theme_tech(theme="airbnb") +
-  scale_fill_tech(theme="airbnb") + coord_flip()
+  scale_fill_tech(theme="airbnb") + coord_flip() +
+  ggsave(filename = 'graphs/graph_conta.png', width = 8, height = 5)
 ```
 
 Plus de quatre patients sur cinq sont contaminé par voie sexuelle ($48,59\%$ hétérosexuel et $34,24\%$ homo/bisexuel). Un peu plus de $7\%$ par voie intraveineuse.
@@ -212,7 +204,8 @@ ggplot(df_typetrt, aes(x = factor(typetrt), y = freq, fill = typetrt)) +
   labs(x = "Type de traitement reçu", y = "Fréquences (en %)", title="Proportion de patients", subtitle="suivant le type de traitement reçu") + 
   guides(fill=FALSE) +
   theme_tech(theme="airbnb") +
-  scale_fill_tech(theme="airbnb") 
+  scale_fill_tech(theme="airbnb") +
+  ggsave(filename = 'graphs/graph_typetrt.png', width = 8, height = 5)
 ```
 
 $35\%$ des patients ont reçu le traitement 2IN+1IP, un tier le 2IN+INN.
@@ -239,7 +232,8 @@ ggplot(df_cd4b1, aes(x = factor(cd4b1), y = freq, fill = cd4b1)) +
   labs(x = "Niveau de CD4B1", y = "Fréquences (en %)", title="Proportion de patients", subtitle="suivant le niveau de CD4 au début du traitement") + 
   guides(fill=FALSE) +
   theme_tech(theme="airbnb") +
-  scale_fill_tech(theme="airbnb") 
+  scale_fill_tech(theme="airbnb") +
+  ggsave(filename = 'graphs/graph_cd4b1.png', width = 8, height = 5)
 ```
 
 Pour les patients ayant un niveau de CD4 connu au début du traitement, deux sur cinq ont leur niveau de CD4 est inférieur à 200. Un tier a un niveau compris entre 200 et 350. Et un quart au-dessus de 350.
@@ -266,7 +260,8 @@ ggplot(df_cd4b2, aes(x = factor(cd4b2), y = freq, fill = cd4b2)) +
   labs(x = "Niveau de CD4B2", y = "Fréquences (en %)", title="Proportion de patients", subtitle="suivant le niveau de CD4 au à l'arrêt du traitement ou fin du suivi") + 
   guides(fill=FALSE) +
   theme_tech(theme="airbnb") +
-  scale_fill_tech(theme="airbnb") 
+  scale_fill_tech(theme="airbnb") +
+  ggsave(filename = 'graphs/graph_cd4b2.png', width = 8, height = 5)
 ```
 
 Quand le niveau est connu, plus d'un patient sur deux, $57.2\%$, à un niveau de CD4 supérieur à 350 à la fin de leur suivi. Près d'un patient sur quatre à un niveau entre 200 et 350 de CD4. Et $18\%$ des patients ont un niveau inférieur à 200 CD4.
@@ -293,7 +288,8 @@ ggplot(df_cvb1, aes(x = factor(cvb1), y = freq, fill = cvb1)) +
   labs(x = "Taux de CVB1", y = "Fréquences (en %)", title="Proportion de patients", subtitle="en fonction de la charge virale au début du traitement") + 
   guides(fill=FALSE) +
   theme_tech(theme="airbnb") +
-  scale_fill_tech(theme="airbnb") 
+  scale_fill_tech(theme="airbnb") +
+  ggsave(filename = 'graphs/graph_cvb1.png', width = 8, height = 5)
 ```
 
 Lorsque le taux est connu, plus de trois patients sur quatre à une charge virale élevée, $38.8\%$ entre 4 et 5, $38.1\%$ au-dessus de 5. Moins d'un quart des patients a une charge inférieure à 4.
@@ -320,7 +316,8 @@ ggplot(df_cvb2, aes(x = factor(cvb2), y = freq, fill = cvb2)) +
   labs(x = "Taux de CVB2", y = "Fréquences (en %)", title="Proportion de patients", subtitle="en fonction de la charge virale à la fin du traitement ou fin de suivi") + 
   guides(fill=FALSE) +
   theme_tech(theme="airbnb") +
-  scale_fill_tech(theme="airbnb")
+  scale_fill_tech(theme="airbnb") +
+  ggsave(filename = 'graphs/graph_cvb2.png', width = 8, height = 5)
 ```
 
 Pour les patients dont la charge virale est connue, $57\%$ ont une charge inférieure à 1.7, trois patients sur dix entre 1.7 et 4. Et $11\%$ d'entre eux a une charge supérieure à 4.
@@ -345,10 +342,11 @@ df_motif
 ggplot(df_motif, aes(x = factor(motif), y = freq, fill = motif)) +
   geom_bar(stat="identity", width = 0.7) +
   geom_text(aes(y = freq, label = paste(round(freq, 2), "%")), hjust = 1.25, family = "Circular Air Medium") +
-  labs(x = "Motif d'arrêt du traitement", y = "Fréquences (en %)", title="Proportion de patients", subtitle="en fonction de du motif d'arrêt du traitement") + 
+  labs(x = "Motif d'arrêt du traitement", y = "Fréquences (en %)", title="Proportion de patients", subtitle="en fonction du motif d'arrêt du traitement") + 
   guides(fill=FALSE) +
   theme_tech(theme="airbnb") +
-  scale_fill_tech(theme="airbnb") + coord_flip()
+  scale_fill_tech(theme="airbnb") + coord_flip() +
+  ggsave(filename = 'graphs/graph_motif.png', width = 8, height = 5)
 ```
 
 La première cause d'arrêt du traitement est l'intolérance/toxicité, $34\%$. $17,5\%$ des patients ont un traitement simplifié. Pour $13\%$ des patients l'arrêt est dû à un échec thérapeutique.
@@ -376,7 +374,8 @@ ggplot(df_motif_trt, aes(x = factor(typetrt), y = freq, fill = motif)) +
   geom_bar(stat="identity", width = 0.7, position="dodge") +
   labs(x = "Type de traitement", y = "Fréquences (en %)", fill = "motif", title="Fréquence du motif d'arrêt", subtitle="en fonction du type de traitement reçu") +
   theme_tech(theme="airbnb") +
-  scale_fill_tech(theme="airbnb") 
+  scale_fill_tech(theme="airbnb") +
+  ggsave(filename = 'graphs/graph_motif_typetrt.png', width = 8, height = 5)
 ```
 
 Les traitements 2IN+1IP et 2IN+INN à une moins bonne tolérance, +5 point et +7 points par rapport à la moyenne, contraierement aux autres traitements. Pour le traitement 2IN+INN, on retrouve peu d'échec thérapeutique, -5 points. Les patients prenant un autre traitement arrêtent eux plus souvent dû à un echec thérapeutique, +5 points.
@@ -408,7 +407,8 @@ ggplot(df_motif_sexe, aes(x = factor(sexe), y = freq, fill = motif)) +
   geom_bar(stat="identity", width = 0.7, position="dodge") +
   labs(x = "Genre", y = "Fréquences (en %)", fill = "motif", title="Fréquence du motif d'arrêt", subtitle="en fonction du sexe du patient") +
   theme_tech(theme="airbnb") +
-  scale_fill_tech(theme="airbnb") 
+  scale_fill_tech(theme="airbnb") +
+  ggsave(filename = 'graphs/graph_motif_sexe.png', width = 8, height = 5)
 ```
 
 Les femmes arrêtent leur traitement plus souvent pour d'autres raison que les hommes, $34\%$ contre $25\%$ et elles ont moins souvent une simplification de leur traitement. Sinon que le patients soit une femme ou un homme les proportions d'arrêts sont presque identique quelque soit le motif. 
@@ -438,9 +438,10 @@ df_motif_age <- base_vih_df %>%
 
 ggplot(df_motif_age, aes(x = factor(age), y = freq, fill = motif)) +
   geom_bar(stat="identity", width = 0.7, position="dodge") +
-  labs(x = "Âge", y = "Fréquences (en %)", fill = "motif", title="Fréquence du motif d'arrêt", subtitle="en fonction de la classe d'âge du patient") +
+  labs(x = "Genre", y = "Fréquences (en %)", fill = "motif", title="Fréquence du motif d'arrêt", subtitle="en fonction de la classe d'âge du patient") +
   theme_tech(theme="airbnb") +
-  scale_fill_tech(theme="airbnb") 
+  scale_fill_tech(theme="airbnb") +
+  ggsave(filename = 'graphs/graph_motif_age.png', width = 8, height = 5)
 ```
 
 Les patients jeunes, 18-30 ans, arrêtent bien moins souvent pour une intolérance au traitement contrairement aux plus âgés, 50-60 ans ($25\%$ des jeunes contre $49\%$ des patients âgés). Par contre on peut remarquer $12\%$ des jeunes arrêtent le traitement car ils ne le suivent pas correctement contre moins de $2\%$ des 50-60 ans. Un patient sur cinq de plus de 40 ans arrêtent le suivi par une simplification du traitement, chez les moins de 30 ans moins de $10\%$ des arrêts sont dû à une simplification. Les 30-40 qui arrêtent le font plus souvent pour une échec thérapeutique que la moyenne contrairement aux jeunes. Les deux jeunes sur cinq ne font plus le suivi pour d'autres raison, moins de $15\%$ du temps chez les 50-60 ans, contre un patient sur quatre en moyenne.
@@ -473,7 +474,8 @@ ggplot(df_motif_observ, aes(x = factor(observ), y = freq, fill = motif)) +
   geom_bar(stat="identity", width = 0.7, position="dodge") +
   labs(x = "Observance du patient", y = "Fréquences (en %)", fill = "motif", title="Fréquence du motif d'arrêt", subtitle="en fonction de l'observance du patient") +
   theme_tech(theme="airbnb") +
-  scale_fill_tech(theme="airbnb") 
+  scale_fill_tech(theme="airbnb") +
+  ggsave(filename = 'graphs/graph_motif_observ.png', width = 8, height = 5)
 ```
 
 Les patients qui suivent leur traitements correctement arrêtent plus souvent le suivi dû à une intolérance ou simplification du traitement mais moins souvent suite à un échec thérapeutique.
@@ -504,7 +506,8 @@ ggplot(df_motif_sida, aes(x = factor(sida), y = freq, fill = motif)) +
   geom_bar(stat="identity", width = 0.7, position="dodge") +
   labs(x = "Stade du patient", y = "Fréquences (en %)", fill = "motif", title="Fréquence du motif d'arrêt", subtitle="en fonction du stade de la maladie du patient") +
   theme_tech(theme="airbnb") +
-  scale_fill_tech(theme="airbnb") 
+  scale_fill_tech(theme="airbnb") +
+  ggsave(filename = 'graphs/graph_motif_sida.png', width = 8, height = 5)
 ```
 
 Les patients ayant atteint le stade du sida ont arrêtaient plus souvent dû a une intolérence ou un échec thérapeutique, respectivement 3.4 et 2.5 points au dessus de la moyenne. Mais globalement quelques soit le stade de la maladie, il n'y a pas de grande différence dans le motif d'arrêt. Cela se vérifie avec le test du chi-deux, p-value = 0.9684.
@@ -520,14 +523,14 @@ Il n'y a pas de liaison significative entre le motif d'arrêt et le stade de la 
 ### Motif d'arrêt en fonction du type de contamination
 
 ```{r}
-tableau6=addmargins(table(base_vih_df$conta,base_vih_df$motif), margin = 1)
-prop.table(tableau6,1)*100
-tableau6
+tablefreq_motif_conta <- addmargins(table(base_vih_df$conta, base_vih_df$motif), margin = 1)
+prop.table(tablefreq_motif_conta, 1) * 100
+tablefreq_motif_conta
 
 df_motif_conta <- base_vih_df %>%
   filter(!is.na(motif)) %>%
   filter(!is.na(conta)) %>%
-  mutate(conta = factor(conta, labels = c("hétérosexuel", "homo/bisexuel","toxico transfusion","autres"))) %>%
+  mutate(conta = factor(conta, labels = c("hétérosexuel", "homo/bisexuel","toxico tansfusion","autres"))) %>%
   group_by(conta, motif) %>%
   summarise(count=n()) %>% 
   mutate(freq=100*count/sum(count)) %>%
@@ -537,7 +540,8 @@ ggplot(df_motif_conta, aes(x = factor(conta), y = freq, fill = motif)) +
   geom_bar(stat="identity", width = 0.7, position="dodge") +
   labs(x = "Type de contamination du patient", y = "Fréquences (en %)", fill = "motif", title="Fréquence du motif d'arrêt", subtitle="en fonction du type de contamination du patient") +
   theme_tech(theme="airbnb") +
-  scale_fill_tech(theme="airbnb") 
+  scale_fill_tech(theme="airbnb") +
+  ggsave(filename = 'graphs/graph_motif_conta.png', width = 8, height = 5)
 ```
 
 Les patients contaminés par toxico voie intraveineuse arrêtent plus souvent par un problème d'observance, 8 points au dessus de la moyenne, mais bien moins souvent que l'ensemble par simplification du traitement, $12\%$ des cas contre $20\%$. Les patients contaminés par d'autre voie sont arrêtent plus souvent dû a une intolérance, $42\%$ des cas contre $34\%$ en moyenne et pour des problèmes d'observance, $10\%$ de leur arrêt contre $6,5\%$ en moyenne. En revanche ils stop leur traitement, plus rarement a cause d'une simplification de ce traitement.
@@ -545,13 +549,10 @@ Les patients contaminés par toxico voie intraveineuse arrêtent plus souvent pa
 On test l'indépendance entre le type de contamination et le motif d'arrêt.
 
 ```{r}
-tableau6b=tableau6[1:3,]
-tableau6b[3,1]=tableau6[3,1]+tableau6[4,1]
-tableau6b[3,2]=tableau6[3,2]+tableau6[4,2]
-tableau6b[3,3]=tableau6[3,3]+tableau6[4,3]
-tableau6b[3,4]=tableau6[3,4]+tableau6[4,4]
-tableau6b[3,5]=tableau6[3,5]+tableau6[4,5]
-chisq.test(tableau6b)
+
+tablefreq_motif_conta
+tablefreq_motif_conta[3,] = tablefreq_motif_conta[3,] + tablefreq_motif_conta[4,]
+chisq.test(tablefreq_motif_age[1:3,])
 ```
 
 On ne retrouve pas du lien entre le type de contamination et le motif.
@@ -559,9 +560,9 @@ On ne retrouve pas du lien entre le type de contamination et le motif.
 ### Motif d'arrêt en fonction du niveau CD4 au début du traitement
 
 ```{r}
-tableau7=addmargins(table(base_vih_df$cd4b1,base_vih_df$motif),  margin = 1)
-prop.table(tableau7,1)*100
-tableau7
+tablefreq_motif_cd4b1 <- addmargins(table(base_vih_df$cd4b1, base_vih_df$motif),  margin = 1)
+prop.table(tablefreq_motif_cd4b1,1) * 100
+tablefreq_motif_cd4b1
 
 df_motif_cd4b1 <- base_vih_df %>%
   filter(!is.na(motif)) %>%
@@ -576,7 +577,8 @@ ggplot(df_motif_cd4b1, aes(x = factor(cd4b1), y = freq, fill = motif)) +
   geom_bar(stat="identity", width = 0.7, position="dodge") +
   labs(x = "Niveau de CD4 du patient", y = "Fréquences (en %)", fill = "motif", title="Fréquence du motif d'arrêt", subtitle="en fonction du niveau de CD4 du patient au début du traitement") +
   theme_tech(theme="airbnb") +
-  scale_fill_tech(theme="airbnb") 
+  scale_fill_tech(theme="airbnb") +
+  ggsave(filename = 'graphs/graph_motif_cd4b1.png', width = 8, height = 5)
 ```
 
 Les patients ayant un niveau de CD4 supérieur à 350 ont plus souvent régulièrement arrêter pour d'autres motif, +8 points, et un peu moins d'échec thérapeutique. Mais dans l'ensemble, il n'y a pas d'écart sur la proportion de motif d'arrêt pour chauqe niveau de CD4 au début du traitement. Cela va être vérifier par un test du khi-deux.
@@ -584,7 +586,7 @@ Les patients ayant un niveau de CD4 supérieur à 350 ont plus souvent réguliè
 On test donc le lien entre CD4B1 et motif.
 
 ```{r}
-chisq.test(tableau7)
+chisq.test(tablefreq_motif_cd4b1)
 ```
 
 On retrouve bien aucun lien significatif entre le niveau de CD4 au début du traitement et le motif d'arrêt.
@@ -592,9 +594,9 @@ On retrouve bien aucun lien significatif entre le niveau de CD4 au début du tra
 ### Motif d'arrêt en fonction du niveau de CD4 au moment de l'arrêt
 
 ```{r}
-tableau8=addmargins(table(base_vih_df$cd4b2,base_vih_df$motif), margin = 1)
-prop.table(tableau8,1)*100
-tableau8
+tablefreq_motif_cd4b2 <- addmargins(table(base_vih_df$cd4b2, base_vih_df$motif), margin = 1)
+prop.table(tablefreq_motif_cd4b2, 1) * 100
+tablefreq_motif_cd4b2
 
 df_motif_cd4b2 <- base_vih_df %>%
   filter(!is.na(motif)) %>%
@@ -609,7 +611,8 @@ ggplot(df_motif_cd4b2, aes(x = factor(cd4b2), y = freq, fill = motif)) +
   geom_bar(stat="identity", width = 0.7, position="dodge") +
   labs(x = "Niveau de CD4 du patient", y = "Fréquences (en %)", fill = "motif", title="Fréquence du motif d'arrêt", subtitle="en fonction du niveau de CD4 du patient à la fin du traitement/suivi") +
   theme_tech(theme="airbnb") +
-  scale_fill_tech(theme="airbnb") 
+  scale_fill_tech(theme="airbnb") +
+  ggsave(filename = 'graphs/graph_motif_cd4b2.png', width = 8, height = 5)
 ```
 
 Les patients ayant un niveau de CD4 inférieur à 200 ont eu plus souvent un échec thérapeutique, $+6\%$, ou un problème d'observance, $+3\%$, par contre ils ont près de deux fois moins souvent une simplification du traitement. A l'inverse des patients ayant eu leur niveau de CD4 qui est au-dessus de 350 où $27,6\%$ ont une simplification du traitemebnt contre $20,1\%$ en moyenne. Les patients, qui ont leur niveau de CD4 entre 200 et 350, ont plus souvent arrêter suite à une intolérence, 4 point au-dessus de la moyenne. Ils ont aussi eux moins de simplification de leur traitement, 6 points de moins que la moyenne.
@@ -617,7 +620,7 @@ Les patients ayant un niveau de CD4 inférieur à 200 ont eu plus souvent un éc
 On test le lien entre CD4B2 et le motif
 
 ```{r}
-chisq.test(tableau8)
+chisq.test(tablefreq_motif_cd4b2)
 ```
 
 On retrouve un lien entre le motif d'arrêt et le niveau de CD4 au moment de l'arrêt.
@@ -627,9 +630,9 @@ On retrouve un lien entre le motif d'arrêt et le niveau de CD4 au moment de l'a
 
 
 ```{r}
-tableau9=addmargins(table(base_vih_df$cvb1,base_vih_df$motif), margin = 1)
-prop.table(tableau9,1)*100
-tableau9
+tablefreq_motif_cvb1 <- addmargins(table(base_vih_df$cvb1, base_vih_df$motif), margin = 1)
+prop.table(tablefreq_motif_cvb1, 1) * 100
+tablefreq_motif_cvb1
 
 df_motif_cvb1 <- base_vih_df %>%
   filter(!is.na(motif)) %>%
@@ -644,7 +647,8 @@ ggplot(df_motif_cvb1, aes(x = factor(cvb1), y = freq, fill = motif)) +
   geom_bar(stat="identity", width = 0.7, position="dodge") +
   labs(x = "Charge virale du patient", y = "Fréquences (en %)", fill = "motif", title="Fréquence du motif d'arrêt", subtitle="en fonction de la charge virale du patient au début du traitement") +
   theme_tech(theme="airbnb") +
-  scale_fill_tech(theme="airbnb") 
+  scale_fill_tech(theme="airbnb") +
+  ggsave(filename = 'graphs/graph_motif_cvb1.png', width = 8, height = 5)
 ```
 
 Les patients ayant eux une charge virale "faible" au début du traitement ont été plus tolérent au traitement et ont eux leur traitement simplifier moins souvent que la moyenne, respectivement -9.3 et -6,3 points de moins que la moyenne. Par contre il y a eu plus d'échec thérapeutique, +4,1 point. Les patients avec une charge virale très élevés ont eux plus souvent une simplification de leur traitement, +7 points, et moins d'échec thérapeutique, -3 points.
@@ -652,7 +656,7 @@ Les patients ayant eux une charge virale "faible" au début du traitement ont é
 Test du lien entre la charge virale au début du traitement et le motif d'arrêt.
 
 ```{r}
-chisq.test(tableau9)
+chisq.test(tablefreq_motif_cvb1)
 ```
 
 On retrouve un lien significatif entre le motif d'arrêt et la charge virale au début du traitement.
@@ -660,9 +664,9 @@ On retrouve un lien significatif entre le motif d'arrêt et la charge virale au 
 ### Motif d'arrêt en fonction dniveau de cv à la fin du traitement
 
 ```{r}
-tableau10=addmargins(table(base_vih_df$cvb2,base_vih_df$motif), margin = 1)
-prop.table(tableau10,1)*100
-tableau10
+tablefreq_motif_cvb2 <- addmargins(table(base_vih_df$cvb2, base_vih_df$motif), margin = 1)
+prop.table(tablefreq_motif_cvb2, 1) * 100
+tablefreq_motif_cvb2
 
 df_motif_cvb2 <- base_vih_df %>%
   filter(!is.na(motif)) %>%
@@ -677,7 +681,8 @@ ggplot(df_motif_cvb2, aes(x = factor(cvb2), y = freq, fill = motif)) +
   geom_bar(stat="identity", width = 0.7, position="dodge") +
   labs(x = "Charge virale du patient", y = "Fréquences (en %)", fill = "motif", title="Fréquence du motif d'arrêt", subtitle="en fonction de la charge virale du patient à la fin du traitement") +
   theme_tech(theme="airbnb") +
-  scale_fill_tech(theme="airbnb") 
+  scale_fill_tech(theme="airbnb") +
+  ggsave(filename = 'graphs/graph_motif_cvb2.png', width = 8, height = 5)
 ```
 
 Les patients qui ont une charge virale inférieur à 1,7 ont arrêté plus souvent que la moyenne dû à une simplification du traitement, 16 points de plus que la moyenne. A l'inverse, ils ont rarement arrêté à cause d'un échec thérapeutique et pour un problème d'observance,  8 et 3 points demoins que la moyenne. On retrouve le cas inverse pour les patients ayant une charge virale supérieur à 4. Ils ont un grand nombre d'échec thérapeutique et de problème d'observance, +15 et +10 points par rapport à la moyenne, et moins de simplification, -19 points (il n'y en a pas). Les patients ayant une charge virale entre 1,7 et 4 ont moins souvent arrêtaient dû à une simplification du traitement, $11\%$ contre $20\%$ en moyenne mais plus  souvent pour d'autres raison, $31\%$ contre $26\%$
@@ -685,7 +690,7 @@ Les patients qui ont une charge virale inférieur à 1,7 ont arrêté plus souve
 Test du lien entre la charge virale à la fin du traitement et le motif d'arrêt.
 
 ```{r}
-chisq.test(tableau10)
+chisq.test(tablefreq_motif_cvb2)
 ```
 
 On retrouve un lien significatif entre ces deux variables.
