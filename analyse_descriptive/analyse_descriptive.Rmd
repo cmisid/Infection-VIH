@@ -12,9 +12,10 @@ output:
 
 ```{r, echo=FALSE}
 
-# setwd(dir = "/home/formationsid/Documents/Github")
+# setwd(dir = "~/Documents/Infection-VIH/analyse_descriptive/")
 setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/analyse_descriptive")
 ```
+
 
 
 ```{r, echo=FALSE}
@@ -22,11 +23,23 @@ library(devtools)
 devtools::install_github("ricardo-bion/ggtech", dependencies=TRUE)
 # Installing fonts
 library(extrafont)
+# Google font
+download.file("http://social-fonts.com/assets/fonts/product-sans/product-sans.ttf", "/Library/Fonts/product-sans.ttf", method="curl")
+font_import(pattern = 'product-sans.ttf', prompt=FALSE)
 # Airbnb fonts
 download.file("https://dl.dropboxusercontent.com/u/2364714/airbnb_ttf_fonts/Circular%20Air-Medium%203.46.45%20PM.ttf", "/Library/Fonts/Circular Air-Medium 3.46.45 PM.ttf", method="curl")
 download.file("https://dl.dropboxusercontent.com/u/2364714/airbnb_ttf_fonts/Circular%20Air-Bold%203.46.45%20PM.ttf", "/Library/Fonts/Circular Air-Bold 3.46.45 PM.ttf", method="curl")
 font_import(pattern = 'Circular', prompt=FALSE)
 ```
+
+
+
+```{r, include=FALSE}
+load(file = "../base_vih_df_cleaned.RData")
+
+library(dplyr)
+```
+
 
 
 ```{r}
@@ -345,11 +358,11 @@ Le profil type d'un patient est un homme ayant entre 30 et 40 ans, étant contam
 ### Type de motif d'arrêt en fonction du traitement
 
 ```{r}
-tablefreq_motif_trt <- addmargins(table(base_vih$typetrt, base_vih$motif), margin = 1)
+tablefreq_motif_trt <- addmargins(table(base_vih_df$typetrt, base_vih_df$motif), margin = 1)
 tablefreq_motif_trt
 prop.table(tablefreq_motif_trt, 1)*100
 
-df_motif_trt <- base_vih %>%
+df_motif_trt <- base_vih_df %>%
   filter(!is.na(motif)) %>%
   mutate(typetrt = factor(typetrt, labels = c("2IN+1IP", "2IN+INN", "autres"))) %>%
   group_by(typetrt, motif) %>%
@@ -365,7 +378,7 @@ ggplot(df_motif_trt, aes(x = factor(typetrt), y = freq, fill = motif)) +
   ggsave(filename = 'graphs/graph_motif_typetrt.png', width = 8, height = 5)
 ```
 
-Le traitement 2IN+INN à une moins bonne tolérance contraierement aux autres traitements. Pour le traitement 2IN+INN, on retrouve peu d'échec thérapeutique mais plus souvent un simplification du traitement. Les patients prenant un autre traitement arrêtent plus souvent dû à un echec thérapeutique.
+Les traitements 2IN+1IP et 2IN+INN à une moins bonne tolérance, +5 point et +7 points par rapport à la moyenne, contraierement aux autres traitements. Pour le traitement 2IN+INN, on retrouve peu d'échec thérapeutique, -5 points. Les patients prenant un autre traitement arrêtent eux plus souvent dû à un echec thérapeutique, +5 points.
 
 On va test le lien entre le motif d'arrêt et le type de traitement pris.
 
@@ -378,11 +391,11 @@ On retrouve un lien significatif entre le motif d'arrêt et le type de traitemen
 ### Motif d'arrêt en fonction du sexe du patient
 
 ```{r}
-tablefreq_motif_sexe <- addmargins(table(base_vih$sexe, base_vih$motif), margin = 1)
+tablefreq_motif_sexe <- addmargins(table(base_vih_df$sexe, base_vih_df$motif), margin = 1)
 tablefreq_motif_sexe
 prop.table(tablefreq_motif_sexe, 1) * 100
 
-df_motif_sexe <- base_vih %>%
+df_motif_sexe <- base_vih_df %>%
   filter(!is.na(motif)) %>%
   mutate(sexe = factor(sexe, labels = c("femme", "homme"))) %>%
   group_by(sexe, motif) %>%
@@ -398,7 +411,7 @@ ggplot(df_motif_sexe, aes(x = factor(sexe), y = freq, fill = motif)) +
   ggsave(filename = 'graphs/graph_motif_sexe.png', width = 8, height = 5)
 ```
 
-Les femmes arrêtent leur traitement plus souvent pour d'autres raison que les hommes, $34\%$ contre $25\%$. Sinon que le patients soit une femme ou un homme les proportions d'arrêts sont presque identique quelque soit le motif. 
+Les femmes arrêtent leur traitement plus souvent pour d'autres raison que les hommes, $34\%$ contre $25\%$ et elles ont moins souvent une simplification de leur traitement. Sinon que le patients soit une femme ou un homme les proportions d'arrêts sont presque identique quelque soit le motif. 
 
 Test de la liaison entre le motif d'arrêt et le sexe du patient.
 
@@ -411,11 +424,11 @@ Le sexe du patient n'a pas de lien significatif avec le motif d'arrêt
 ### Motif d'arrêt en fonction de la classe d'âge
 
 ```{r}
-tablefreq_motif_age <- addmargins(table(base_vih$age, base_vih$motif), margin=1)
+tablefreq_motif_age <- addmargins(table(base_vih_df$age, base_vih_df$motif), margin=1)
 tablefreq_motif_age
 prop.table(tablefreq_motif_age, 1) * 100
 
-df_motif_age <- base_vih %>%
+df_motif_age <- base_vih_df %>%
   filter(!is.na(motif)) %>%
   mutate(age = factor(age, labels = c("[18;30[", "[30;40[", "[40;50[", "[50;60["))) %>%
   group_by(age, motif) %>%
@@ -445,11 +458,11 @@ La classe d'âge est liée significativement avec le motif d'arrêt.
 ### Motif d'arrêt en fonction de l'observance du patient
 
 ```{r}
-tablefreq_motif_observ <- addmargins(table(base_vih$observ, base_vih$motif), margin=1)
+tablefreq_motif_observ <- addmargins(table(base_vih_df$observ, base_vih_df$motif), margin=1)
 tablefreq_motif_observ
 prop.table(tablefreq_motif_observ, 1) * 100
 
-df_motif_observ <- base_vih %>%
+df_motif_observ <- base_vih_df %>%
   filter(!is.na(motif)) %>%
   mutate(observ = factor(observ, labels = c("non", "oui"))) %>%
   group_by(observ, motif) %>%
@@ -476,11 +489,11 @@ Le motif d'arrêt et l'observance du patient sont significativement liés.
 ### Motif d'arrêt en fonction du stade de la maladie
 
 ```{r}
-tablefreq_motif_sida <- addmargins(table(base_vih$sida, base_vih$motif), margin=1)
+tablefreq_motif_sida <- addmargins(table(base_vih_df$sida, base_vih_df$motif), margin=1)
 tablefreq_motif_sida
 prop.table(tablefreq_motif_sida, 1) * 100
 
-df_motif_sida <- base_vih %>%
+df_motif_sida <- base_vih_df %>%
   filter(!is.na(motif)) %>%
   filter(!is.na(sida)) %>%
   mutate(sida = factor(sida, labels = c("non", "oui"))) %>%
@@ -497,7 +510,7 @@ ggplot(df_motif_sida, aes(x = factor(sida), y = freq, fill = motif)) +
   ggsave(filename = 'graphs/graph_motif_sida.png', width = 8, height = 5)
 ```
 
-Les patients ayant atteint le stade du sida ont arrêtaient plus souvent dû a une intolérence ou un échec thérapeutique, respectivement 4.3 et 2.3 point au dessus de la moyenne.
+Les patients ayant atteint le stade du sida ont arrêtaient plus souvent dû a une intolérence ou un échec thérapeutique, respectivement 3.4 et 2.5 points au dessus de la moyenne. Mais globalement quelques soit le stade de la maladie, il n'y a pas de grande différence dans le motif d'arrêt. Cela se vérifie avec le test du chi-deux, p-value = 0.9684.
 
 On test le lien entre le motif d'arrêt et le stade de la maladie du patient.
 
@@ -510,11 +523,11 @@ Il n'y a pas de liaison significative entre le motif d'arrêt et le stade de la 
 ### Motif d'arrêt en fonction du type de contamination
 
 ```{r}
-tablefreq_motif_conta <- addmargins(table(base_vih$conta, base_vih$motif), margin = 1)
+tablefreq_motif_conta <- addmargins(table(base_vih_df$conta, base_vih_df$motif), margin = 1)
 prop.table(tablefreq_motif_conta, 1) * 100
 tablefreq_motif_conta
 
-df_motif_conta <- base_vih %>%
+df_motif_conta <- base_vih_df %>%
   filter(!is.na(motif)) %>%
   filter(!is.na(conta)) %>%
   mutate(conta = factor(conta, labels = c("hétérosexuel", "homo/bisexuel","toxico tansfusion","autres"))) %>%
@@ -531,12 +544,15 @@ ggplot(df_motif_conta, aes(x = factor(conta), y = freq, fill = motif)) +
   ggsave(filename = 'graphs/graph_motif_conta.png', width = 8, height = 5)
 ```
 
-Les patients contaminés par toxico voie intraveineuse arrêtent plus souvent par un échec thérapeutique ou un problème d'observance (5.7 et 4 point au dessus de la moyenne) mais deux fois moins souvent que l'ensemble par simplification du traitement, $9\%$ des cas contre $17.5\%$. Les patients contaminés par d'autre voie sont arrêtent plus souvent dû a une intolérance, $49\%$ des cas contre $34\%$ en moyenne. En revanche ils stop leur traitement, plus rarement a cause d'un échec thérapeutique ou une simplification de ce traitement.
+Les patients contaminés par toxico voie intraveineuse arrêtent plus souvent par un problème d'observance, 8 points au dessus de la moyenne, mais bien moins souvent que l'ensemble par simplification du traitement, $12\%$ des cas contre $20\%$. Les patients contaminés par d'autre voie sont arrêtent plus souvent dû a une intolérance, $42\%$ des cas contre $34\%$ en moyenne et pour des problèmes d'observance, $10\%$ de leur arrêt contre $6,5\%$ en moyenne. En revanche ils stop leur traitement, plus rarement a cause d'une simplification de ce traitement.
 
 On test l'indépendance entre le type de contamination et le motif d'arrêt.
 
 ```{r}
-chisq.test(tablefreq_motif_conta)
+
+tablefreq_motif_conta
+tablefreq_motif_conta[3,] = tablefreq_motif_conta[3,] + tablefreq_motif_conta[4,]
+chisq.test(tablefreq_motif_age[1:3,])
 ```
 
 On ne retrouve pas du lien entre le type de contamination et le motif.
@@ -544,11 +560,11 @@ On ne retrouve pas du lien entre le type de contamination et le motif.
 ### Motif d'arrêt en fonction du niveau CD4 au début du traitement
 
 ```{r}
-tablefreq_motif_cd4b1 <- addmargins(table(base_vih$cd4b1, base_vih$motif),  margin = 1)
+tablefreq_motif_cd4b1 <- addmargins(table(base_vih_df$cd4b1, base_vih_df$motif),  margin = 1)
 prop.table(tablefreq_motif_cd4b1,1) * 100
 tablefreq_motif_cd4b1
 
-df_motif_cd4b1 <- base_vih %>%
+df_motif_cd4b1 <- base_vih_df %>%
   filter(!is.na(motif)) %>%
   filter(!is.na(cd4b1)) %>%
   mutate(cd4b1 = factor(cd4b1, labels = c("<200", "200:350",">350"))) %>%
@@ -565,7 +581,7 @@ ggplot(df_motif_cd4b1, aes(x = factor(cd4b1), y = freq, fill = motif)) +
   ggsave(filename = 'graphs/graph_motif_cd4b1.png', width = 8, height = 5)
 ```
 
-Les patients ayant un niveau de CD4 supérieur à 350 ont moins souvent arrêtaient pour intolérance mais plus souvent pour d'autres motif. Dans l'ensemble, il n'y a pas d'écart sur la proportion de motif d'arrêt pour chauqe niveau de CD4 au début du traitement. Cela va être vérifier par un test du khi-deux.
+Les patients ayant un niveau de CD4 supérieur à 350 ont plus souvent régulièrement arrêter pour d'autres motif, +8 points, et un peu moins d'échec thérapeutique. Mais dans l'ensemble, il n'y a pas d'écart sur la proportion de motif d'arrêt pour chauqe niveau de CD4 au début du traitement. Cela va être vérifier par un test du khi-deux.
 
 On test donc le lien entre CD4B1 et motif.
 
@@ -578,11 +594,11 @@ On retrouve bien aucun lien significatif entre le niveau de CD4 au début du tra
 ### Motif d'arrêt en fonction du niveau de CD4 au moment de l'arrêt
 
 ```{r}
-tablefreq_motif_cd4b2 <- addmargins(table(base_vih$cd4b2, base_vih$motif), margin = 1)
+tablefreq_motif_cd4b2 <- addmargins(table(base_vih_df$cd4b2, base_vih_df$motif), margin = 1)
 prop.table(tablefreq_motif_cd4b2, 1) * 100
 tablefreq_motif_cd4b2
 
-df_motif_cd4b2 <- base_vih %>%
+df_motif_cd4b2 <- base_vih_df %>%
   filter(!is.na(motif)) %>%
   filter(!is.na(cd4b2)) %>%
   mutate(cd4b2 = factor(cd4b2, labels = c("<200", "200:350",">350"))) %>%
@@ -599,7 +615,7 @@ ggplot(df_motif_cd4b2, aes(x = factor(cd4b2), y = freq, fill = motif)) +
   ggsave(filename = 'graphs/graph_motif_cd4b2.png', width = 8, height = 5)
 ```
 
-Les patients ayant un niveau de CD4 inférieur à 200 ont eu plus souvent un échec thérapeutique, $+6\%$, ou un problème d'observance, $+4\%$, par contre ils ont deux fois moins souvent une simplification du traitement. A l'inverse des patients ayant eu leur niveau de CD4 qui est passé au-dessus de 350.
+Les patients ayant un niveau de CD4 inférieur à 200 ont eu plus souvent un échec thérapeutique, $+6\%$, ou un problème d'observance, $+3\%$, par contre ils ont près de deux fois moins souvent une simplification du traitement. A l'inverse des patients ayant eu leur niveau de CD4 qui est au-dessus de 350 où $27,6\%$ ont une simplification du traitemebnt contre $20,1\%$ en moyenne. Les patients, qui ont leur niveau de CD4 entre 200 et 350, ont plus souvent arrêter suite à une intolérence, 4 point au-dessus de la moyenne. Ils ont aussi eux moins de simplification de leur traitement, 6 points de moins que la moyenne.
 
 On test le lien entre CD4B2 et le motif
 
@@ -614,11 +630,11 @@ On retrouve un lien entre le motif d'arrêt et le niveau de CD4 au moment de l'a
 
 
 ```{r}
-tablefreq_motif_cvb1 <- addmargins(table(base_vih$cvb1, base_vih$motif), margin = 1)
+tablefreq_motif_cvb1 <- addmargins(table(base_vih_df$cvb1, base_vih_df$motif), margin = 1)
 prop.table(tablefreq_motif_cvb1, 1) * 100
 tablefreq_motif_cvb1
 
-df_motif_cvb1 <- base_vih %>%
+df_motif_cvb1 <- base_vih_df %>%
   filter(!is.na(motif)) %>%
   filter(!is.na(cvb1)) %>%
   mutate(cvb1 = factor(cvb1, labels = c("1,7:4", "4:5",">5"))) %>%
@@ -635,7 +651,7 @@ ggplot(df_motif_cvb1, aes(x = factor(cvb1), y = freq, fill = motif)) +
   ggsave(filename = 'graphs/graph_motif_cvb1.png', width = 8, height = 5)
 ```
 
-Les patients ayant eux une charge virale "faible" au début du traitement ont été plus tolérent au traitement et ont eux leur traitement simplifier moins souvent que la moyenne, respectivement $-11\%$ et $-5\%$. Par contre il y a eu plus d'échec thérapeutique, $+4\%$. Les patientsavec une charge virale très élevés ont eux plus souvent une simplification de leur traitement, +7 points, et moins d'échec thérapeutique, -4 points.
+Les patients ayant eux une charge virale "faible" au début du traitement ont été plus tolérent au traitement et ont eux leur traitement simplifier moins souvent que la moyenne, respectivement -9.3 et -6,3 points de moins que la moyenne. Par contre il y a eu plus d'échec thérapeutique, +4,1 point. Les patients avec une charge virale très élevés ont eux plus souvent une simplification de leur traitement, +7 points, et moins d'échec thérapeutique, -3 points.
 
 Test du lien entre la charge virale au début du traitement et le motif d'arrêt.
 
@@ -648,11 +664,11 @@ On retrouve un lien significatif entre le motif d'arrêt et la charge virale au 
 ### Motif d'arrêt en fonction dniveau de cv à la fin du traitement
 
 ```{r}
-tablefreq_motif_cvb2 <- addmargins(table(base_vih$cvb2, base_vih$motif), margin = 1)
+tablefreq_motif_cvb2 <- addmargins(table(base_vih_df$cvb2, base_vih_df$motif), margin = 1)
 prop.table(tablefreq_motif_cvb2, 1) * 100
 tablefreq_motif_cvb2
 
-df_motif_cvb2 <- base_vih %>%
+df_motif_cvb2 <- base_vih_df %>%
   filter(!is.na(motif)) %>%
   filter(!is.na(cvb2)) %>%
   mutate(cvb2 = factor(cvb2, labels = c("<1,7", "1,7:4",">4"))) %>%
@@ -669,7 +685,7 @@ ggplot(df_motif_cvb2, aes(x = factor(cvb2), y = freq, fill = motif)) +
   ggsave(filename = 'graphs/graph_motif_cvb2.png', width = 8, height = 5)
 ```
 
-Les patients qui ont une charge virale inférieur à 1,7 ont arrêté plus souvent que la moyenne dû à une simplification du traitement, 15 points de plus que la moyenne. A l'inverse, ils ont rarement arrêté à cause d'un échec thérapeutique et pour un problème d'observance,  10 et 4 points demoins que la moyenne. On retrouve le cas inverse pour les patients ayant une charge virale supérieur à 4. Ils ont un grand nombre d'échec thérapeutique et de problème d'observance, +18 et +10 points par rapport à la moyenne, et moins de simplification, -19 points (il n'y en a pas).
+Les patients qui ont une charge virale inférieur à 1,7 ont arrêté plus souvent que la moyenne dû à une simplification du traitement, 16 points de plus que la moyenne. A l'inverse, ils ont rarement arrêté à cause d'un échec thérapeutique et pour un problème d'observance,  8 et 3 points demoins que la moyenne. On retrouve le cas inverse pour les patients ayant une charge virale supérieur à 4. Ils ont un grand nombre d'échec thérapeutique et de problème d'observance, +15 et +10 points par rapport à la moyenne, et moins de simplification, -19 points (il n'y en a pas). Les patients ayant une charge virale entre 1,7 et 4 ont moins souvent arrêtaient dû à une simplification du traitement, $11\%$ contre $20\%$ en moyenne mais plus  souvent pour d'autres raison, $31\%$ contre $26\%$
 
 Test du lien entre la charge virale à la fin du traitement et le motif d'arrêt.
 

@@ -9,23 +9,17 @@ output:
     theme: flatly
 ---
 
-**TODO**
-- Faire le tableau mais à des dates particulières par exemple tous les 6 mois, ou sinon en fonction des probas (pas de 0.1 en 0.1 par exemple).
-  + calculer le complémentaire de `survival`
-
-Tableau de résultat: Passer à la semaine ou au mois  
-
-- Construire la courbe de survie.
-  + intervalles de confiances pour le global
-
-Taux d'évênement au cours du temps  
-Bivarié: test du log-rank  
-Multivarié: modèle de Cox
+```{r, include=FALSE}
+wants <- c("dplyr", "mosaic", "survival", "splines", "survminer", "ggplot2")
+has <- wants %in% rownames(installed.packages())
+if(any(!has)) install.packages(wants[!has])
+```
 
 # Modélisation longitudinale par des méthodes d'analyse de survie
 
 ```{r, echo=FALSE}
-setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/") # Axel
+# setwd(dir = "~/Documents/Infection-VIH/analyse_survie/") # Joseph
+setwd(dir = "~/Google Drive/UPS/M2 SID - 2016_2017/BE_VIH_STATISTIQUE_SANTE/analyse_survie") # Axel
 # setwd(dir = "/Users/ismailaddou/Documents/R/Infection-VIH") #Ismail
 ```
 
@@ -36,7 +30,7 @@ Notre objectif est ici d'étudier la survenue d'évènements au cours du temps. 
 Afin de mettre en place une modélisation longitudinale par des méthodes d'analyse de survie, nous construisons notre jeu de données.
 
 ```{r, include=FALSE}
-load(file = "../base_vih_df_cleaned.Rdata")
+load(file = "../base_vih_df_cleaned.RData")
 
 library(dplyr)
 library(mosaic)
@@ -49,7 +43,7 @@ df <- base_vih_df %>%
       as.numeric(d_point-d_debtrt))
     ) %>%
   mutate(arret_trt=as.numeric(arret_trt)) %>%
-  select(duree, arret_trt, typetrt, sexe) %>%
+  select(duree, arret_trt, typetrt, sexe, sida, observ, conta, cd4b1, cd4b2, cvb1, cvb2, age) %>%
   arrange(duree)
 ```
 
@@ -72,7 +66,7 @@ fits <- survfit(Surv(df$duree, df$arret_trt)~1)
 fits
 ```
 
-**Joseph**: commentaires généraux 
+Sur nos 767 patients, 527 ont arrêté leur traitement. Un patient sur deux arrête sont traitement au bout de 13 mois, plus précisement 396 jours.
 
 ```{r}
 format_survival_table <- function(fits) {
@@ -88,11 +82,12 @@ format_survival_table <- function(fits) {
       fits$n.risk[indexes],
       fits$n.event[indexes],
       fits$surv[indexes],
+      1-fits$surv[indexes],
       fits$std.err[indexes],
       fits$lower[indexes],
       fits$upper[indexes])
   )
-  colnames(summary_fits) <- c("time", "n.risk", "n.event", "survival", "std.err", "lower 95% CI", "upper 95% CI")
+  colnames(summary_fits) <- c("time", "n.risk", "n.event", "survival", "1-survival", "std.err", "lower 95% CI", "upper 95% CI")
   summary_fits <- summary_fits[!duplicated(summary_fits),]
   return(summary_fits)
 }
@@ -101,8 +96,8 @@ summary_fits <- format_survival_table(fits)
 summary_fits
 ```
 
-**Joseph**: commentaires sur le tableau :
-- ne pas oublier de dire que l'écart-type augmente avec le temps donc les IC sont de plus en plus larges
+On remarque un arrêt rapide des premiers patients, $10\%$ au bout d'un mois. Un arrêt sur quatre a lieu dans les 3 premiers mois. Un patient sur deux va arrêtait après 13 mois. Au bout de 40 mois seulement un patient sur quatre continura sont traitement. Un patient sur huit va aller au dela de 80 mois. A travers ces chiffres, on voit clairement que de nombreux patients vont vite arrêtaient mais se qui tiendrons aurons tendance a suivre leur traitement longtemps.
+Avec le temps, la population étudié diminue et engendre une augmentation du risque d'erreurs, via notre écart-type et donc nos intervalles de confiance.
 
 ### Représentation de la courbe de survie
 
@@ -115,7 +110,7 @@ ggsurvplot(fits,
            break.time.by = 360)
 ```
 
-**Joseph**: commentaires sur la courbe
+La courbe représente bien les remarques précédentes. On retrouve une perte rapide, nombre d'arrêt, au début puis un éloignement des arrêts avec le temps. Ceux qui tiennent durant les 3-4 premières années auront tendance à tenir très longtemps après.
 
 ## Estimation de la survie suivant le type de traitement
 
@@ -128,9 +123,8 @@ fits_trt <- survfit(Surv(df$duree, df$arret_trt)~df$typetrt)
 fits_trt
 ```
 
-```{r}
-summary(fits_trt)
-```
+Nous n'avons pas exactement le même nombre d'évênements pour chaque type de traitement mais ils sont tout de même assez proches. On note qu'il y a eu plus d'évênements d'arrêts de traitement pour les patients ayant suivi le traitement "autres" (mono, bi, quadrithérapie).
+
 ```{r}
 for (i in 0:2) {
   print(paste("df$typetrt==", i, sep=""))
@@ -139,7 +133,8 @@ for (i in 0:2) {
   print(format_survival_table(fits))
 }
 ```
-
+Quelque soit le type de traitement, on voit que la tendance est la même, beaucoup d'arrêt rapide. Les patients prenant un autre type de traitement auront une perte plus rapide de patient au début mais cela s'équilibre avec le temps. A l'inverse les patients prenant le traitement 2IN+INN vont avoir une perte plus faible que l'ensemble sur les premiers mois mais vont avoir une seconde période de grande perte entre 30 et 40 mois de traitement.
+Pour tous les traitements, au bout d'environ un mois, entre 27 et 41 jours, $10\%$ des patients auront arrêté. La perte du premier quart des patients à lieu après à peine 53 jours pour les autres traitements contre 140 pour le 2IN+INN. L'écart se creuse pour le temps d'arrêt médian, environ 255 jour pour les autres traitements, 391 jour pour 2IN+1IP et 797 jours pour 2IN+INN. Sur la période entre le 800ème et 1200ème jour le traitement 2IP+INN perd $10\%$ de patients en plusque les 2 autres type de traitement. On retrouve $80\%$ d'arrêt après environ 1300 jours pour le traitements 2IN+1IP et autres, et 1600 jour pour 2IP+INN. Au final quelque soit le traitement on se retrouve avec le taux final de survie proche.
 
 ### Représentation graphique
 
@@ -163,7 +158,7 @@ ggsurvplot(fits_trt,
 )
 ```
 
-On représente la survie de Kaplan-Meier avec en abscisse la durée de suivi et en ordonnée l'estimation de la fonction de survie. On note que le taux d'arrêt de traitement est identique pour les 3 traitements mais sur les 3 premières années l'arrêt est plus tardif pour le traitement 1.
+On représente la survie de Kaplan-Meier avec en abscisse la durée de suivi et en ordonnée l'estimation de la fonction de survie. On note que le taux d'arrêt de traitement est quasiment identique pour les 3 traitements mais sur les 3 premières années l'arrêt est plus tardif pour le traitement 1 (2IN+INN).
 
 ### Test du Log-Rank
 
@@ -179,44 +174,71 @@ On cherche si la différence observée entre les courbes de survie dans les grou
 ```{r}
 survdiff(Surv(df$duree, df$arret_trt)~df$typetrt)
 ```
-Ici on rejette $H_0$ l'hypothèse d'égalité des courbes de survie et on conclut à une différence significative des délais de survenue de l'évènement dans les 3 groupes. On note que la plus grosse contribution vient du traitement 1 suivi du traitement 2. Cela signifie qu'il y a de gros écarts entre les effectifs observés et les effectifs attendus (théoriques). On conclut que la survenue d'un arrêt de traitement est plus tardive lorsque les patients prennent le traitement 1.
+Ici on rejette $H_0$ l'hypothèse d'égalité des courbes de survie et on conclut à une différence significative des délais de survenue de l'évènement dans les 3 groupes. On note que la plus grosse contribution vient du traitement 1 suivi du traitement 2. Cela signifie qu'il y a de gros écarts entre les effectifs observés et les effectifs attendus (théoriques). On conclut que la survenue d'un arrêt de traitement est plus tardive lorsque les patients prennent le traitement 1. Cela confirme ce que nous avons pu voir sur le graphique représentant la fonction de survie.
+
+On décide de mettre en oeuvre le test du log-rank pour tous les facteurs possibles et de ne retenir que les facteurs qui ont des p-values significatives. On ne prend pas les variables qui concernent la fin du traitement ou du suivi comme `cd4b2` ou `cvb2`.
+
+```{r}
+facteurs <- c("typetrt", "sexe", "sida", "observ", "conta", "cd4b1", "cvb1", "age")
+for (facteur in facteurs) {
+  tmp_survdiff <- survdiff(Surv(df$duree, df$arret_trt) ~ df[, facteur])
+  p_value <- pchisq(tmp_survdiff$chisq, length(tmp_survdiff$n) - 1, lower.tail = FALSE)
+  print(sprintf("%s: %s", facteur, round(p_value, 4)))
+}
+```
+Ici nous constatons que seules les facteurs `typetrt`, `sida`, et `conta` sont significatif au seuil $\alpha=5\%$.
 
 ### Modèle de Cox
 
 Le modèle de Cox permet d'exprimer le risque instantané de survenue de l'évènement en fonction de l'instant $t$ et des variables explicatives $X^j$. Il permet donc d'étudier l'effet éventuel de plusieurs covariables sur la survie.
+En effectuant le test du Log-Rank sur chaque facteur nous en avons conclu que nous conserverions seulement 3 covariables explicatives.
 
 ```{r}
-options(contrasts=c("contr.SAS","contr.SAS"))
-cox_trt <- coxph(Surv(df$duree, df$arret_trt)~df$typetrt)
-cox_trt
+options(contrasts=c("contr.treatment","contr.treatment"))
+cox_all <- coxph(Surv(df$duree, df$arret_trt) ~ df$typetrt + df$sida + df$conta)
 ```
 
 ```{r}
-anova(cox_trt)
+anova(cox_all)
 ```
+On note ici que les facteurs `typetrt`, `sida` sont très significatifs (p-value $\ll 0.01$) sur le risque instantané d'arrêt de traitement. La covariable `conta` est elle aussi significative.
 
-L'effet du type traitement est significatif sur le risque instantané d'arrêt de traitement.
 
 ```{r}
-summary(cox_trt)
+summary(cox_all)
 ```
-Ici on note que $e^{\beta_{\_trt\_0}}$ est inférieur à 1, ceci indique que des valeurs élevées de la caractéristique traitement 0 sont associées à un risque instantané d'arrêt de traitement plus faible. Ainsi, la survenue d'arrêt est environ 30% plus faible pour les patients ayant pris le traitement 1 plutôt que le traitement 2. Le risque instantané d'arrêt est multiplié par 0.87 lorsque que l'on compare le traitement 0 et le traitement 2. On constate donc que le traitement 2 augmente le risque instantané d'arrêt de traitement comparé aux 2 autres traitements.
-Notons également que pour la *p-value* du traitement 1 liée à la statistique $Z$ est inférieure à $5\%$ donc l'hypothèse que $\beta_{trt_1}=0$ est rejetée. Pour le traitement 0 on ne peut pas rejeter $H_0$ au seuil $\alpha=5\%$. 
+Nous allons ici décrire les facteurs et leurs modalités significatives en commençant par ceux les plus significatifs.
+Pour chaque *p-value* liée à la statistique $Z$, on va regarder si elle est inférieure à $5\%$ pour vérifier que l'hypothèse que $\beta_{coeff}=0$ puisse être rejetée. Si ce n'est pas le cas, on ne pourra pas rejeter $H_0$ au seuil $\alpha=5\%$ et la modalité du facteur ne sera pas considérée. 
+
+Tout d'abord, on note que $e^{\beta_{sida_1}}$ est supérieur à 1, ceci indique que des valeurs élevées de la $sida\_1$ sont associées à un risque instantané d'arrêt de traitement plus élevé. Le risque instantané d'arrêt est multiplié par $1.41$ lorsque que l'on compare le patient a le sida. 
+Concernant le type de traitement, le traitement 1 n'est pas significatif, mais le traitement 2 l'est. Nous pouvons donc interpréter l'exponentielle du coefficient associé. Comme cette valeur est supérieure à 1, cela indique que des valeurs élevées du traitement "autres" sont associées à un risque instantané d'arrêt de traitement lui aussi plus élevé. Ce constat est similaire pour la modalité 2 du facteur contamination. Le risque instantané d'arrêt de traitement est multiplié par $1.41$ lorsque le patient est contaminé par voie intraveineuse par rapport à un patient contaminé de manière hétérosexuelle. 
+Lorsque les patients sont contaminés par un autre mode (transfusion, hémophilie), le risque instantané d'arrêt de traitement est plus faible ($~\times 0.67$).
 
 Nous cherchons à voir si l'hypothèse des risques proportionnels est raisonnable ou non. Nous avons mis en évidence un effet: cet effet est il constant au cours du temps ?
 
 `cox.zph` nous permet de tester le modèle des risques proportionnels de Cox.
 ```{r}
-diag_trt <- cox.zph(cox_trt)
-diag_trt
+diag_all <- cox.zph(cox_all)
+diag_all
 ```
 
 Cette matrice contient une ligne pour chaque variable et une ligne pour le test global. La matrice contient le coefficient de corrélation entre la durée de survie transformée et les résidus de Schoenfeld, un $\mathcal{X}^2$, et une p-value. Pour le test global il n'y a pas de corrélation appropriée, c'est pourquoi nous avons un "NA". 
+Le test global de validité du modèle des risques proportionnels de Cox conduit à rejeter $H_0$ : certaines covariables on un effet dépendant du temps. C'est le type de traitement 2 qui conduit à rejeter cette hypothèse (p-value $< 5\%$).
 
 ```{r}
-par(mfrow=c(2,1))
-plot(diag_trt)
+ggcoxzph(diag_all)
 ```
 
 En abscisse nous avons la durée de suivi et en ordonnée nous avons les valeurs des résidus de Schoenfeld.
+
+Tout éloignement de l’horizontale traduit un effet dépendant du temps. L’effet du traitement 2 décroit linéairement avec le temps, il n'est donc pas toujours constant. Les autres effets ont l’air plutôt fixes.
+
+Nous avons essayé ensuite de mettre en place un modèle de sélection descendante pour choisir les facteurs les plus significatifs et cette méthode de sélection n'a retiré aucun des 3 facteurs déjà présents.
+
+
+```{r}
+cox_back <- step(cox_all, direction="backward")
+summary(cox_back)
+anova(cox_back)
+```
 
